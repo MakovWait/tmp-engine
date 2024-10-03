@@ -36,6 +36,7 @@ public class Game
             Tree.Update();
         }
 
+        Tree.Free();
         Raylib.CloseWindow();
     }
 }
