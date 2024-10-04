@@ -12,19 +12,19 @@ public static class Extensions
         return new Vector2I((int)self.X, (int)self.Y);
     }
 
-    public static float ToDeg(this float self)
+    public static Degrees RadToDeg(this float self)
     {
-        return Mathf.RadToDeg(self);
+        return new Degrees(Mathf.RadToDeg(self));
     }
     
-    public static float ToRad(this float self)
+    public static Radians DegToRad(this float self)
     {
-        return Mathf.DegToRad(self);
+        return new Radians(Mathf.DegToRad(self));
     }
     
-    public static float ToRad(this int self)
+    public static Radians DegToRad(this int self)
     {
-        return Mathf.DegToRad(self);
+        return new Radians(Mathf.DegToRad(self));
     }
     
     public static int ToInt(this float self)

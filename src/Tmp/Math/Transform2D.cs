@@ -35,7 +35,7 @@ public struct Transform2D : IEquatable<Transform2D>
     private static readonly Transform2D _flipY = new Transform2D(1f, 0.0f, 0.0f, -1f, 0.0f, 0.0f);
 
     /// <summary>Returns the transform's rotation (in radians).</summary>
-    public readonly float Rotation => Mathf.Atan2(this.X.Y, this.X.X);
+    public readonly Radians Rotation => new (Mathf.Atan2(this.X.Y, this.X.X));
 
     /// <summary>Returns the scale.</summary>
     public readonly Vector2 Scale
@@ -161,6 +161,13 @@ public struct Transform2D : IEquatable<Transform2D>
     /// <param name="v">A vector to transform.</param>
     /// <returns>The transformed vector.</returns>
     public readonly Vector2 BasisXform(Vector2 v) => new Vector2(this.Tdotx(v), this.Tdoty(v));
+    
+    /// <summary>
+    /// TODO I have no idea what does it do
+    /// </summary>
+    /// <param name="v">A vector to transform.</param>
+    /// <returns>The transformed vector.</returns>
+    public readonly Vector2 Xform(Vector2 v) => new Vector2(Tdotx(v), Tdoty(v)) + Origin;
 
     /// <summary>
     /// Returns a vector transformed (multiplied) by the inverse basis matrix,
@@ -399,7 +406,7 @@ public struct Transform2D : IEquatable<Transform2D>
     /// <param name="scale">The scale of the new transform.</param>
     /// <param name="skew">The skew of the new transform, in radians.</param>
     /// <param name="origin">The origin vector, or column index 2.</param>
-    public Transform2D(float rotation, Vector2 scale, float skew, Vector2 origin)
+    public Transform2D(Radians rotation, Vector2 scale, float skew, Vector2 origin)
     {
         (float Sin1, float Cos1) = Mathf.SinCos(rotation);
         (float Sin2, float Cos2) = Mathf.SinCos(rotation + skew);

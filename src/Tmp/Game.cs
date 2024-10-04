@@ -21,7 +21,7 @@ public class Game
         const int screenWidth = 800;
         const int screenHeight = 450;
 
-        Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
+        Raylib.SetConfigFlags(ConfigFlags.TopmostWindow);
         Raylib.InitWindow(screenWidth, screenHeight, "Hello World");
         Raylib.SetTargetFPS(60);
         

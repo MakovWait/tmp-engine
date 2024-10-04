@@ -11,7 +11,7 @@ public class CCanvasLayer() : Component(self =>
     
     self.CreateContext(new СNode2DTransform
     {
-        Transform = new Transform2D(0, Vector2.Zero)
+        Local = Transform2D.Identity
     });
     self.CreateContext<ICanvasItemContainer>(layer);
     

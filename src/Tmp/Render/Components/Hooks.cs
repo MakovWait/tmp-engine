@@ -21,7 +21,7 @@ public static class Hooks
 
         self.On<PreDraw>(() =>
         {
-            item.SetGlobalTransform(transform.Get().GlobalTransform);
+            item.SetFinalTransform(transform.Get().Global);
         });
 
         return item;

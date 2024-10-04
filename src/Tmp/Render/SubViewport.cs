@@ -59,7 +59,7 @@ public class SubViewport(int screenHeight, int screenWidth, int virtualWidth, in
     {
         public void Draw(IDrawContext ctx)
         {
-            var source = new Rect2(0, 0, -subViewport._target.Texture.Width, subViewport._target.Texture.Height);
+            var source = new Rect2(0, 0, subViewport._target.Texture.Width, -subViewport._target.Texture.Height);
             var dest = new Rect2(
                 -subViewport.VirtualRatio, 
                 -subViewport.VirtualRatio,

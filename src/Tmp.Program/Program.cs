@@ -73,22 +73,37 @@ game.Run(tree =>
                     return new Component(self =>
                     {
                         var transform = self.UseTransform2D();
+                        var canvasItem = self.UseCanvasItem(transform);
                         
+                        self.UseEffect(() =>
+                        {
+                            transform.Get().Skew = -56f;
+                            // transform.Get().Scale = new Vector2(2, 2);
+                            // transform.Get().Rotation = new Degrees(45);
+                            // transform.Get().Position = new Vector2(6, 6);
+                        }, [transform]);
+                            
                         self.On<Update>(dt =>
                         {
-                            transform.Get().Rotation += 45.ToRad() * dt;
+                            transform.Get().Rotation += 45.DegToRad() * dt;
                         });
                         
-                        return new CCanvasItem(new()
+                        canvasItem.OnDraw(ctx =>
                         {
-                            Transform2D = Transform2D.Identity,
-                            OnDraw = ctx =>
-                            {
-                                ctx.DrawRect(new Rect2I(Vector2I.Zero, new Vector2I(12, 12)), Color.Red);
-                            }
+                            // ctx.DrawRect(new Rect2I(Vector2I.Zero, new Vector2I(12, 12)), Color.Red);
+                            ctx.DrawRect(new Rect2I(new Vector2I(-6, -6), new Vector2I(12, 12)), Color.Blue);
+                            ctx.DrawLine(new Vector2(0, 0), new Vector2(0, 10), Color.Green);
                         });
                     });
                 }),
+                // new Component(self =>
+                // {
+                //     var canvasItem = self.UseCanvasItem(self.UseTransform2D());
+                //     canvasItem.OnDraw(ctx =>
+                //     {
+                //         ctx.DrawRect(new Rect2I(Vector2I.Zero, new Vector2I(12, 12)), Color.White);
+                //     });
+                // }),
                 {
                     new CCamera2D(80, 45, new())
                 },
@@ -110,6 +125,92 @@ game.Run(tree =>
                     ctx.DrawFps();
                 }
             }),
+            // new Component(self =>
+            // {
+            //     var canvasItem = self.UseCanvasItem(self.UseTransform2D());
+            //     canvasItem.OnDraw(ctx =>
+            //     {
+            //         ctx.DrawRect(new Rect2I(Vector2I.Zero, new Vector2I(12, 12)), Color.White);
+            //     });
+            // }),
+            new Component(self =>
+            {
+                var transform = self.UseTransform2D();
+                var canvasItem = self.UseCanvasItem(transform);
+                
+                canvasItem.OnDraw(_ =>
+                {
+                    Raylib.DrawLine(0, -4500, 0, 450, Color.Green);
+                    Raylib.DrawLine(-8000, 0, 8000, 0, Color.Green);
+                });
+            }),
+            
+            new Component(self =>
+                {
+                    var transform = self.UseTransform2D();
+                
+                    self.On<Input<InputEventMouseMotion>>(e =>
+                    {
+                        Console.WriteLine(e);
+                    });
+                
+                    self.On<Input<InputEventKey>>(e =>
+                    {
+                        Console.WriteLine(e);
+                    });
+                
+                    self.On<Update>(dt =>
+                    {
+                        var dir = new Vector2();
+                        if (Input.IsKeyPressed(KeyboardKey.D))
+                        {
+                            dir += Vector2.Right;
+                        }
+                
+                        if (Input.IsKeyPressed(KeyboardKey.A))
+                        {
+                            dir += Vector2.Left;
+                        }
+                
+                        if (Input.IsKeyPressed(KeyboardKey.W))
+                        {
+                            dir += Vector2.Up;
+                        }
+                
+                        if (Input.IsKeyPressed(KeyboardKey.S))
+                        {
+                            dir += Vector2.Down;
+                        }
+                
+                        dir = dir.Normalized();
+                        transform.Get().Position += dir * 10 * dt;
+                        Console.WriteLine(transform.Get().Global);
+                    });
+
+                    return new Component(self =>
+                    {
+                        var transform = self.UseTransform2D();
+                        var canvasItem = self.UseCanvasItem(transform);
+                        
+                        self.UseEffect(() =>
+                        {
+                            // transform.Get().Rotation = new Degrees(45);
+                            // transform.Get().Position += new Vector2(6, 6);
+                        }, [transform]);
+                            
+                        self.On<Update>(dt =>
+                        {
+                            transform.Get().Rotation += 45.DegToRad() * dt;
+                            Console.WriteLine(transform.Get().Global);
+                        });
+                        
+                        canvasItem.OnDraw(ctx =>
+                        {
+                            // ctx.DrawRect(new Rect2I(Vector2I.Zero, new Vector2I(12, 12)), Color.Red);
+                            ctx.DrawRect(new Rect2I(new Vector2I(-6, -6), new Vector2I(12, 12)), Color.Blue);
+                        });
+                    });
+                }),
             new CCamera2D(400, 225, new())
         ];
     }));
