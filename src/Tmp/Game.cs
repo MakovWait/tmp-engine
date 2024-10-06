@@ -4,13 +4,14 @@ using Tmp.Core.Redot;
 
 namespace Tmp;
 
-public delegate void Update(float dt);
+public readonly record struct Update(float Dt)
+{
+    public static implicit operator float(Update self) => self.Dt;
+}
 
-public delegate void PreDraw();
+public readonly struct PreDraw;
 
-public delegate void Draw();
-
-public delegate void Input<in T>(T e);
+public readonly struct Draw;
 
 public class Game
 {
@@ -42,9 +43,9 @@ public class Game
     public void Render()
     {
         Input.Propagate(_tree);
-        _tree.QueueCall<Update>(update => update(Raylib.GetFrameTime()));
-        _tree.QueueCall<PreDraw>(preDraw => preDraw());
-        _tree.QueueCall<Draw>(draw => draw());
+        _tree.Call(new Update(Raylib.GetFrameTime()));
+        _tree.Call<PreDraw>();
+        _tree.Call<Draw>();
         _tree.Update();
     }
 }

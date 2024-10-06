@@ -34,11 +34,6 @@ public class Tree
         freeQueue.DequeueAll();
     }
     
-    public void QueueCall<T>(Action<T> call) where T : Delegate
-    {
-        callQueue.Enqueue(() => Call(call));
-    }
-    
     public void AttachToRoot(IComponent component)
     {
         root.CreateChild(component);
@@ -54,9 +49,14 @@ public class Tree
         hiddenRoot.SafeFree();
     }
     
-    private void Call<T>(Action<T> call) where T : Delegate
+    public void Call<T>() where T : new()
     {
-        hiddenRoot.Call(call);
+        hiddenRoot.Call(new T());
+    }
+    
+    public void Call<T>(T state)
+    {
+        hiddenRoot.Call(state);
     }
 
     internal void CallDeferred(Action action)

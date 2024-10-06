@@ -30,21 +30,15 @@ public static class Input
         {
             if (Raylib.IsKeyPressed(key))
             {
-                tree.QueueCall<Input<InputEventKey>>(input => input(
-                    new InputEventKey(key, true, false))
-                );
+                tree.Call(new InputEventKey(key, true, false));
             }
             else if (Raylib.IsKeyPressedRepeat(key))
             {
-                tree.QueueCall<Input<InputEventKey>>(input => input(
-                    new InputEventKey(key, true, Raylib.IsKeyPressedRepeat(key)))
-                );
+                tree.Call(new InputEventKey(key, true, Raylib.IsKeyPressedRepeat(key)));
             }
             else if (Raylib.IsKeyReleased(key))
             {
-                tree.QueueCall<Input<InputEventKey>>(input => input(
-                    new InputEventKey(key, false, false))
-                );
+                tree.Call(new InputEventKey(key, false, false));
                 ReleasedKeysThisFrame.Add(key);
             }
         }
@@ -52,8 +46,7 @@ public static class Input
         var mouseDelta = Raylib.GetMouseDelta();
         if (mouseDelta.LengthSquared() > 0)
         {
-            var e = new InputEventMouseMotion(new Vector2I((int)mouseDelta.X, (int)mouseDelta.Y));
-            tree.QueueCall<Input<InputEventMouseMotion>>(input => input(e));
+            tree.Call(new InputEventMouseMotion(new Vector2I((int)mouseDelta.X, (int)mouseDelta.Y)));
         }
 
         foreach (var key in ReleasedKeysThisFrame)

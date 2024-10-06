@@ -8,14 +8,16 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
 {
     private readonly List<IComponent> outerChildren = [];
 
-    public Component() : this(self => self.Children)
+    public Component() : this(self => self.Children.ToArray())
     {
     }
     
     public Component(Action<Self> build) : this(node =>
     {
+        // node.Children throws error after node building
+        var children = node.Children.ToArray();
         build(node);
-        return node.Children;
+        return children;
     })
     {
     }
@@ -142,13 +144,25 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             return @unchecked.Use<T>();
         }
 
-        public void On<T>(T callback) where T : Delegate
+        public void On<T>(Action callback)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.On<T>(_ => callback());
+        }
+        
+        public void On<T>(Action<T> callback)
         {
             AssertNodeIsBuilding();
             @unchecked.On(callback);
         }
         
-        public void After<T>(T callback) where T : Delegate
+        public void After<T>(Action callback)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.After<T>(_ => callback());
+        }
+        
+        public void After<T>(Action<T> callback)
         {
             AssertNodeIsBuilding();
             @unchecked.After(callback);

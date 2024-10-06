@@ -2,7 +2,7 @@
 
 namespace Tmp.Tests.Redot;
 
-public delegate void TestTrigger();
+public readonly struct TestTrigger;
 
 public class Tests
 {
@@ -52,7 +52,7 @@ public class Tests
             });
         }));
         
-        container.Call<TestTrigger>(test => test());
+        container.Call<TestTrigger>();
         Assert.Fail();
     }
     
@@ -99,7 +99,7 @@ public class Tests
             });
         }));
         
-        container.Call<TestTrigger>(test => test());
+        container.Call<TestTrigger>();
         Assert.Fail();
     }
     

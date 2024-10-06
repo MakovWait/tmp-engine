@@ -34,11 +34,7 @@ public static class Project
                         new Component(self =>
                         {
                             var transform = self.UseTransform2D();
-
-                            self.On<Input<InputEventMouseMotion>>(e => { Console.WriteLine(e); });
-
-                            self.On<Input<InputEventKey>>(e => { Console.WriteLine(e); });
-
+                            
                             self.On<Update>(dt =>
                             {
                                 var dir = new Vector2();
@@ -135,11 +131,7 @@ public static class Project
                     new Component(self =>
                     {
                         var transform = self.UseTransform2D();
-
-                        self.On<Input<InputEventMouseMotion>>(e => { Console.WriteLine(e); });
-
-                        self.On<Input<InputEventKey>>(e => { Console.WriteLine(e); });
-
+                        
                         self.On<Update>(dt =>
                         {
                             var dir = new Vector2();
@@ -165,7 +157,6 @@ public static class Project
 
                             dir = dir.Normalized();
                             transform.Get().Position += dir * 10 * dt;
-                            Console.WriteLine(transform.Get().Global);
                         });
 
                         return new Component(self =>
@@ -182,7 +173,6 @@ public static class Project
                             self.On<Update>(dt =>
                             {
                                 transform.Get().Rotation += 45.DegToRad() * dt;
-                                Console.WriteLine(transform.Get().Global);
                             });
 
                             canvasItem.OnDraw(ctx =>

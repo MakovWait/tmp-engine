@@ -86,7 +86,7 @@ public class ContextTests
         tree.AttachToRoot(new Component(compA =>
         {
             var ctx = compA.CreateContext(1);
-            compA.On<TestCallback>(() =>
+            compA.On<TestCallback>(_ =>
             {
                 ctx.Replace(2);
             });
@@ -125,7 +125,7 @@ public class ContextTests
                 }, i);
             });
         }));
-        tree.QueueCall<TestCallback>(callback => callback());
+        tree.Call<TestCallback>();
         tree.Update();
         tree.Free();
         Assert.Fail();
@@ -158,7 +158,7 @@ public class ContextTests
                 });
             });
         }));
-        tree.QueueCall<TestCallback>(callback => callback());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.Fail();
     }
@@ -194,7 +194,7 @@ public class ContextTests
                 });
             });
         }));
-        tree.QueueCall<TestCallback>(callback => callback());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.That(calls, Is.EqualTo(new List<int> {1, 2, 3, 4}));
     }
@@ -231,7 +231,7 @@ public class ContextTests
                 });
             });
         }));
-        tree.QueueCall<TestCallback>(callback => callback());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.Fail();
     }
@@ -411,7 +411,7 @@ public class ComponentTests
                 compC.On<TestCallback>(() => calls.Add(3));
             })
         });
-        tree.QueueCall<TestCallback>(c => c());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.That(calls, Is.EqualTo(new List<int> {1, 3, 2}));
     }
@@ -428,7 +428,7 @@ public class ComponentTests
                 compC.On<TestCallback>(() => calls.Add(3));
             })
         });
-        tree.QueueCall<TestCallback>(c => c());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.That(calls, Is.EqualTo(new List<int> { 3 }));
     }
@@ -445,7 +445,7 @@ public class ComponentTests
                 compC.On<TestCallback>(() => calls.Add(3));
             })
         });
-        tree.QueueCall<TestCallback>(c => c());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.That(calls, Is.EqualTo(new List<int> { 3 }));
     }
@@ -461,21 +461,9 @@ public class CallbackTests
         {
             compA.On<TestCallback>(Assert.Pass);
         }));
-        tree.QueueCall<TestCallback>(c => c());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.Fail();
-    }
-    
-    [Test]
-    public void TestCallbacksAreNotTriggeredWithoutTreeUpdate()
-    {
-        var tree = new Tree();
-        tree.AttachToRoot(new Component(compA =>
-        {
-            compA.On<TestCallback>(Assert.Fail);
-        }));
-        tree.QueueCall<TestCallback>(c => c());
-        Assert.Pass();
     }
     
     [Test]
@@ -488,7 +476,7 @@ public class CallbackTests
             compA.On<TestCallback>(() => calls.Add(1));
             compA.On<TestCallback>(() => calls.Add(2));
         }));
-        tree.QueueCall<TestCallback>(c => c());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.That(calls, Is.EqualTo(new List<int> {1, 2}));
     }
@@ -506,10 +494,10 @@ public class CallbackTests
                 compB.On<TestCallback>(() => calls.Add(2));
             });
         }));
-        tree.QueueCall<TestCallback>(c => c());
+        tree.Call<TestCallback>();
         tree.Update();
         Assert.That(calls, Is.EqualTo(new List<int> {1, 2}));
     }
 }
 
-public delegate void TestCallback();
+public readonly record struct TestCallback;

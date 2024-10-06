@@ -23,7 +23,7 @@ public class Node
     
     private Node? parent;
     private IId id = new IdEmpty();
-    private NodeState state = NodeState.Ready;
+    private NodeState state = NodeState.Building;
     private bool firstTimeEntersTree = true;
 
     internal Node(Tree tree)
@@ -32,11 +32,16 @@ public class Node
         this.tree = tree;
     }
     
-    public void Call<T>(Action<T> call) where T : Delegate
+    public void Call<T>() where T : new()
     {
-        callbacksOn.Call(call);
-        children.Call(call);
-        callbacksAfter.Call(call);
+        Call(new T());
+    }
+    
+    public void Call<T>(T state)
+    {
+        callbacksOn.Call(state);
+        children.Call(state);
+        callbacksAfter.Call(state);
     }
 
     public ICreatedContextValue<T> CreateContext<T>(T val)
@@ -52,12 +57,12 @@ public class Node
         return val;
     }
     
-    public void On<T>(T callback) where T : Delegate
+    public void On<T>(Action<T> callback)
     {
         callbacksOn.Add(callback);
     }
     
-    public void After<T>(T callback) where T : Delegate
+    public void After<T>(Action<T> callback)
     {
         callbacksAfter.Add(callback);
     }
@@ -243,7 +248,6 @@ public class Node
     private Node CreateSubChild(IComponent component)
     {
         var node = new Node(tree);
-        node.StateSet(NodeState.Building);
         var childComponents = component.Build(node);
         node.StateSet(NodeState.Built);
         foreach (var childComponent in childComponents)
@@ -431,11 +435,11 @@ public class Node
             }
         }
 
-        public void Call<T>(Action<T> call) where T : Delegate
+        public void Call<T>(T state)
         {
             foreach (var child in List)
             {
-                child.Call(call);
+                child.Call(state);
             }
         }
 
@@ -479,31 +483,37 @@ public class Node
         }
     }
 
-    private class Callbacks
+    internal class Callbacks
     {
-        private readonly Dictionary<Type, List<object>> map = new();
+        private readonly List<ICallback> _callbacks = [];
     
-        public void Call<T>(Action<T> call)
+        public void Call<T>(T state)
         {
-            foreach (T callback in Bucket<T>())
+            foreach (var callback in _callbacks)
             {
-                call(callback);
+                callback.Handle(state);
             }
         }
 
-        public void Add<T>(T callback) where T : Delegate
+        public void Add<T>(Action<T> callback)
         {
-            Bucket<T>().Add(callback);
+            _callbacks.Add(new Callback<T>(callback));
         }
 
-        private List<object> Bucket<T>()
+        private interface ICallback
         {
-            if (!map.ContainsKey(typeof(T)))
+            void Handle<T>(T state);
+        }
+        
+        private class Callback<Y>(Action<Y> callback) : ICallback
+        {
+            public void Handle<T>(T state)
             {
-                map[typeof(T)] = [];
+                if (state is Y casted)
+                {
+                    callback(casted);
+                }
             }
-
-            return map[typeof(T)];
         }
     }
 
