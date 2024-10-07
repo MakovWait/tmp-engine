@@ -1,6 +1,7 @@
 ﻿using Raylib_cs;
 using Tmp.Core;
 using Tmp.Core.Redot;
+using Tmp.HotReload.Components;
 
 namespace Tmp;
 
@@ -25,6 +26,8 @@ public class Game
         Raylib.SetConfigFlags(ConfigFlags.TopmostWindow);
         Raylib.InitWindow(screenWidth, screenHeight, "Hello World");
         Raylib.SetTargetFPS(60);
+        
+        _tree.DecorateRootUp(new CHotReloadSource());
         
         setup.Invoke(_tree);
     }

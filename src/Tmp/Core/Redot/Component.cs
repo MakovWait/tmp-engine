@@ -93,6 +93,18 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             }));
         }
 
+        public void Call<TState>(TState state)
+        {
+            AssertNodeIsReady();
+            @unchecked.Call(state);
+        }
+        
+        public void Call<TState>() where TState : new()
+        {
+            AssertNodeIsReady();
+            @unchecked.Call<TState>();
+        }
+
         public void UseEffect(Action effect, IEffectDependency deps)
         {
             UseEffect(() =>
