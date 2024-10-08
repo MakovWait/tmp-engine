@@ -1,12 +1,39 @@
 ﻿using System.Collections;
 using System.Diagnostics;
+using Tmp.HotReload.Components;
 
 namespace Tmp.Core.Redot;
 
-public class Component(Func<Component.Self, IEnumerable<IComponent>> build) 
+public readonly record struct NoProps {}
+
+public class Component : Component<NoProps>
+{
+    public Component() : base()
+    {
+        
+    }
+    
+    public Component(Action<Self> build) : base(build)
+    {
+    }
+
+    public Component(Func<Self, IComponent> build) : base(build)
+    {
+        
+    }
+    
+    public Component(Func<Self, IEnumerable<IComponent>> build) : base(build)
+    {
+        
+    }
+}
+
+public class Component<T>(Func<Component<T>.Self, IEnumerable<IComponent>> build) 
     : IComponent, IEnumerable<IFakeEnumerable>, IFakeEnumerable
 {
-    private readonly List<IComponent> outerChildren = [];
+    public readonly List<IComponent> Children = [];
+    public Func<T> Props { get; init; } = () => default!;
+    private PropsCache _propsCache;
 
     public Component() : this(self => self.Children.ToArray())
     {
@@ -29,13 +56,20 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
 
     public void Add(IComponent outerChild)
     {
-        outerChildren.Add(outerChild);
+        Children.Add(outerChild);
     }
 
     IEnumerable<IComponent> IComponent.Build(Node node)
     {
-        var self = new Self(node, outerChildren);
+        _propsCache = new PropsCache(this);
+        _propsCache.Update();
+        
+        var self = new Self(this, node);
         var children = build(self);
+        self.On<HotReloadUpdateApplication>(() =>
+        {
+            _propsCache.Update();
+        });
         return children;
     }
 
@@ -49,16 +83,33 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
         return GetEnumerator();
     }
     
-    public class Self(Node @unchecked, IEnumerable<IComponent> outerChildren)
+    public class PropsCache(Component<T> component)
+    {
+        private T _value;
+
+        public void Update()
+        {
+            _value = component.Props();
+        }
+        
+        public T Value()
+        {
+            return _value;
+        }
+    }
+    
+    public class Self(Component<T> component, Node @unchecked)
     {
         public IEnumerable<IComponent> Children
         {
             get
             {
                 AssertNodeIsBuilding();
-                return outerChildren;
+                return component.Children;
             }
         }
+
+        public T Props => component._propsCache.Value();
 
         private readonly Node @unchecked = @unchecked;
         

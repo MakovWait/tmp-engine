@@ -1,6 +1,7 @@
 ﻿using Raylib_cs;
 using Tmp.Core;
 using Tmp.Core.Redot;
+using Tmp.HotReload.Components;
 using Tmp.Math;
 using Tmp.Math.Components;
 using Tmp.Render;
@@ -182,9 +183,26 @@ public static class Project
                             });
                         });
                     }),
-                    new CCamera2D(400, 225, new())
+                    new CCamera2D(400, 225, new()),
+                    new Component<TestProps>(self =>
+                    {
+                        self.On<HotReloadUpdateApplication>(_ =>
+                        {
+                            Console.WriteLine("Hot reload!");
+                        });
+                        
+                        self.On<Update>(dt =>
+                        {
+                            Console.WriteLine(self.Props.Value);
+                        });
+                    })
+                    {
+                        Props = () => new TestProps(10)
+                    }
                 ];
             }));
         });
     }
 }
+
+public readonly record struct TestProps(int Value);
