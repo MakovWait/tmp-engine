@@ -5,7 +5,7 @@ namespace Tmp.HotReload.Components;
 public class CHotReloadSource() : Component(self =>
 {
     var hotReloadSource = new HotReloadSource();
-    self.CreateContext(hotReloadSource);
+    self.SetSingleton<IHotReloadSource>(hotReloadSource);
 
     var target = new HotReloadTarget(self);
     self.UseEffect(() =>

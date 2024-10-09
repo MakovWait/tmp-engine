@@ -179,6 +179,18 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             AssertNodeIsBuilding();
             @unchecked.After(callback);
         }
+        
+        public void SetSingleton<T>(T singleton)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.SetSingleton(singleton);
+        }
+    
+        public T UseSingleton<T>()
+        {
+            AssertNodeIsBuilding();
+            return @unchecked.UseSingleton<T>();
+        }
 
         private void AssertNodeIsReady()
         {

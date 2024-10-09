@@ -56,6 +56,16 @@ public class Node
         contextValues.Add(val);
         return val;
     }
+
+    public void SetSingleton<T>(T singleton)
+    {
+        tree.SetSingleton(singleton);
+    }
+    
+    public T UseSingleton<T>()
+    {
+        return tree.UseSingleton<T>();
+    }
     
     public void On<T>(Action<T> callback)
     {

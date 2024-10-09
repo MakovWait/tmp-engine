@@ -86,7 +86,7 @@ public static class Project
                                     ctx.DrawRect(new Rect2I(new Vector2I(-6, -6), new Vector2I(12, 12)), Color.Blue);
                                     ctx.DrawLine(new Vector2(0, 0), new Vector2(0, 10), Color.Green);
                                     
-                                    texture.Get().Get().Draw(ctx);
+                                    texture.Get().Draw(ctx);
                                 });
                             });
                         }),

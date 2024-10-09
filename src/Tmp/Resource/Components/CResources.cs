@@ -5,8 +5,7 @@ namespace Tmp.Resource.Components;
 
 public sealed class CResources(IResources resources) : Component(self =>
 {
-    // TODO introduce service/singleton
-    self.CreateContext(resources);
+    self.SetSingleton(resources);
     resources.AddLoader(new Texture2D.Loader());
     
     self.UseEffect(() => resources.Dispose, []);

@@ -1,4 +1,6 @@
-﻿namespace Tmp.Core.Redot;
+﻿using System.Diagnostics;
+
+namespace Tmp.Core.Redot;
 
 public class Tree
 {
@@ -8,6 +10,7 @@ public class Tree
     private readonly Queue<Action> callQueue = new();
     private readonly Queue<Action> callDeferredQueue = new();
     private readonly IdNodeDict idNodeDict = new();
+    private readonly Dictionary<Type, object> _singletons = new();
 
     internal IIdNodeDict IdNodeDict => idNodeDict;
 
@@ -67,6 +70,17 @@ public class Tree
     internal void QueueFree(Node node)
     {
         freeQueue.Add(node);
+    }
+
+    public void SetSingleton<T>(T singleton)
+    {
+        Debug.Assert(!_singletons.ContainsKey(typeof(T)));
+        _singletons[typeof(T)] = singleton ?? throw new ArgumentNullException(nameof(singleton));   
+    }
+    
+    public T UseSingleton<T>()
+    {
+        return (T)_singletons[typeof(T)];
     }
 }
 

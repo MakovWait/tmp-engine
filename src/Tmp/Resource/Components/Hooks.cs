@@ -4,14 +4,9 @@ namespace Tmp.Resource.Components;
 
 public static class Hooks
 {
-    public static IDeferredValue<Res<T>> UseRes<T>(this Component.Self self, ResourcePath path)
+    public static Res<T> UseRes<T>(this Component.Self self, ResourcePath path)
     {
-        var resources = self.Use<IResources>();
-        var res = new DeferredValue<Res<T>>();
-        self.UseEffect(() =>
-        {
-            res.Set(resources.Get().Load<T>(path));
-        }, [resources]);
-        return res;
+        var resources = self.UseSingleton<IResources>();
+        return resources.Load<T>(path);
     }
 }
