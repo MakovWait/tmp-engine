@@ -31,4 +31,9 @@ public static class Extensions
     {
         return (int)self;
     }
+
+    public static float Abs(this float self)
+    {
+        return Mathf.Abs(self);
+    }
 }

@@ -72,11 +72,74 @@ public class CanvasItem : ICanvasItemContainer, IDrawContext
         Raylib.DrawTriangle(topLeft, bottomRight, topRight, color);
     }
 
-    public void DrawTexture(_Texture2D texture, Rect2 source, Rect2 dest, Color color)
+    public void DrawTextureRect(_Texture2D texture, Rect2 rect, Color color)
     {
-        // TODO impl
+        DrawTextureRectRegion(texture, rect, new Rect2(0, 0, texture.Width, texture.Height), color);
+    }
+
+    public void DrawTextureRectRegion(_Texture2D texture, Rect2 rect, Rect2 sourceRect, Color modulate)
+    {
         var transform = GetFinalTransform();
-        Raylib.DrawTexturePro(texture, source, dest, transform.Origin, transform.Rotation.ToDeg(), color);
+        
+        var topLeft = rect.Position;
+        var topRight = new Vector2(rect.Position.X + rect.Size.X, rect.Position.Y);
+        var bottomRight = new Vector2(rect.Position.X + rect.Size.X, rect.Position.Y + rect.Size.Y);
+        var bottomLeft = new Vector2(rect.Position.X, rect.Position.Y + rect.Size.Y);   
+        
+        topLeft = transform.Origin + transform.BasisXform(topLeft);
+        topRight = transform.Origin + transform.BasisXform(topRight);
+        bottomRight = transform.Origin + transform.BasisXform(bottomRight);
+        bottomLeft = transform.Origin + transform.BasisXform(bottomLeft);
+
+        var flipX = false;
+        if (sourceRect.Size.X < 0)
+        {
+            flipX = true;
+            sourceRect.Size = new Vector2(-sourceRect.Size.X, sourceRect.Size.Y);
+        }
+
+        if (sourceRect.Size.Y < 0)
+        {
+            sourceRect.Position = new Vector2(sourceRect.Position.X, sourceRect.Position.Y - sourceRect.Size.Y);
+        }
+
+        rect.Size = new Vector2(rect.Size.X.Abs(), rect.Size.Y.Abs());
+        
+        var width = texture.Width;
+        var height = texture.Height;
+        
+        var sourceX = sourceRect.Position.X;
+        var sourceY = sourceRect.Position.Y;
+        var sourceWidth = sourceRect.Size.X;
+        var sourceHeight = sourceRect.Size.Y;
+        
+        Rlgl.SetTexture(texture.Id);
+        Rlgl.Begin(DrawMode.Quads);
+        
+        Rlgl.Color4ub(modulate.R, modulate.G, modulate.B, modulate.A);
+        Rlgl.Normal3f(0.0f, 0.0f, 1.0f);
+        
+        if (flipX) Rlgl.TexCoord2f((sourceX + sourceWidth)/width, sourceY/height);
+        else Rlgl.TexCoord2f(sourceX/width, sourceY/height);
+        Rlgl.Vertex2f(topLeft.X, topLeft.Y);
+
+        // Bottom-left corner for texture and quad
+        if (flipX) Rlgl.TexCoord2f((sourceX + sourceWidth)/width, (sourceY + sourceHeight)/height);
+        else Rlgl.TexCoord2f(sourceX/width, (sourceY + sourceHeight)/height);
+        Rlgl.Vertex2f(bottomLeft.X, bottomLeft.Y);
+
+        // Bottom-right corner for texture and quad
+        if (flipX) Rlgl.TexCoord2f(sourceX/width, (sourceY + sourceHeight)/height);
+        else Rlgl.TexCoord2f((sourceX + sourceWidth)/width, (sourceY + sourceHeight)/height);
+        Rlgl.Vertex2f(bottomRight.X, bottomRight.Y);
+        
+        // Top-right corner for texture and quad
+        if (flipX) Rlgl.TexCoord2f(sourceX/width, sourceY/height);
+        else Rlgl.TexCoord2f((sourceX + sourceWidth)/width, sourceY/height);
+        Rlgl.Vertex2f(topRight.X, topRight.Y);
+        
+        Rlgl.End();
+        Rlgl.SetTexture(0);
     }
 
     public void DrawFps()
@@ -111,7 +174,9 @@ public interface IDrawContext
     
     void DrawRect(Rect2I rect, Color color);
 
-    void DrawTexture(_Texture2D texture, Rect2 source, Rect2 dest, Color color);
+    internal void DrawTextureRect(_Texture2D texture, Rect2 rect, Color modulate);
+    
+    internal void DrawTextureRectRegion(_Texture2D texture, Rect2 rect, Rect2 sourceRect, Color modulate);
     
     void DrawFps();
 }

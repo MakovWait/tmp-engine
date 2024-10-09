@@ -86,7 +86,12 @@ public static class Project
                                     ctx.DrawRect(new Rect2I(new Vector2I(-6, -6), new Vector2I(12, 12)), Color.Blue);
                                     ctx.DrawLine(new Vector2(0, 0), new Vector2(0, 10), Color.Green);
                                     
-                                    texture.Get().Draw(ctx);
+                                    texture.Get().DrawTextureRectRegion(
+                                        ctx, 
+                                        new Rect2(-16, -16, 32, 32), 
+                                        new Rect2(0, 0, 32, 32), 
+                                        Color.White
+                                    );
                                 });
                             });
                         }),
@@ -104,9 +109,12 @@ public static class Project
                     },
                     new CCanvasItem(new()
                     {
-                        Transform2D = Transform2D.Identity.TranslatedLocal(new Vector2I(400, 225)),
+                        Transform2D = new Transform2D(0, new Vector2(-400, -225)),
 
-                        OnDraw = ctx => { subViewportTexture.Get().Draw(ctx); }
+                        OnDraw = ctx =>
+                        {
+                            subViewportTexture.Get().Draw(ctx, Vector2.Zero, Color.White);
+                        }
                     }),
                     new CCanvasItem(new()
                     {

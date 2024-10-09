@@ -2,6 +2,7 @@ using Raylib_cs;
 using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Render.Util;
+using Tmp.Resource.BuiltIn;
 
 namespace Tmp.Render;
 
@@ -55,19 +56,25 @@ public class SubViewport(int screenHeight, int screenWidth, int virtualWidth, in
         self.CreateContext<ICamera2D>(_camera);
     }
 
-    public class Texture(SubViewport subViewport)
+    public class Texture(SubViewport subViewport) : ITexture2D
     {
-        public void Draw(IDrawContext ctx)
+        public void Draw(IDrawContext ctx, Vector2 position, Color modulate)
         {
-            var source = new Rect2(0, 0, subViewport._target.Texture.Width, -subViewport._target.Texture.Height);
-            var dest = new Rect2(
-                -subViewport.VirtualRatio, 
-                -subViewport.VirtualRatio,
-                subViewport.ScreenWidth + (subViewport.VirtualRatio * 2),
-                subViewport.ScreenHeight + (subViewport.VirtualRatio * 2)
-            );
-            
-            ctx.DrawTexture(subViewport._target.Texture, source, dest, Color.White);
+            ctx.DrawTextureRectRegion(TargetTexture, new Rect2(position, ScreenSize), Source, modulate);
         }
+
+        public void DrawTextureRect(IDrawContext ctx, Rect2 rect, Color modulate)
+        {
+            ctx.DrawTextureRectRegion(TargetTexture, rect, Source, modulate);
+        }
+
+        public void DrawTextureRectRegion(IDrawContext ctx, Rect2 rect, Rect2 srcRect, Color modulate)
+        {
+            ctx.DrawTextureRectRegion(TargetTexture, rect, Source, modulate);
+        }
+        
+        private Rect2 Source => new(0, 0, subViewport._target.Texture.Width, -subViewport._target.Texture.Height);
+        private _Texture2D TargetTexture => subViewport._target.Texture;
+        private Vector2 ScreenSize => new(subViewport.ScreenWidth, subViewport.ScreenHeight);
     }
 }
