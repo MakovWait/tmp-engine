@@ -10,4 +10,10 @@
       <ProjectReference Include="..\Tmp\Tmp.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="res\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>

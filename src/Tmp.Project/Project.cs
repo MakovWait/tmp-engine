@@ -5,6 +5,7 @@ using Tmp.Math;
 using Tmp.Math.Components;
 using Tmp.Render;
 using Tmp.Render.Components;
+using Tmp.Resource.Components;
 
 namespace Tmp.Project;
 
@@ -67,6 +68,8 @@ public static class Project
                                 var transform = self.UseTransform2D();
                                 var canvasItem = self.UseCanvasItem(transform);
 
+                                var texture = self.UseRes<Texture2D>("res://sheets.png");
+                                
                                 self.UseEffect(() =>
                                 {
                                     transform.Get().Skew = -56f;
@@ -82,6 +85,8 @@ public static class Project
                                     // ctx.DrawRect(new Rect2I(Vector2I.Zero, new Vector2I(12, 12)), Color.Red);
                                     ctx.DrawRect(new Rect2I(new Vector2I(-6, -6), new Vector2I(12, 12)), Color.Blue);
                                     ctx.DrawLine(new Vector2(0, 0), new Vector2(0, 10), Color.Green);
+                                    
+                                    texture.Get().Get().Draw(ctx);
                                 });
                             });
                         }),
