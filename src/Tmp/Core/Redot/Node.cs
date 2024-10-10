@@ -20,6 +20,8 @@ public class Node
     private readonly ContextValues contextValues = new();
     private readonly LifecycleEffects lifecycleEffects = new();
     private readonly Children children = new();
+    // TODO resolve collisions with NodeState
+    private readonly State _state = new();
     
     private Node? parent;
     private IId id = new IdEmpty();
@@ -55,6 +57,16 @@ public class Node
         var val = new ContextValue<T>(this);
         contextValues.Add(val);
         return val;
+    }
+
+    public StateValue<T> UseState<T>(T initial)
+    {
+        return _state.Create(initial);
+    }
+    
+    public StateValueOptional<T> UseStateOpt<T>()
+    {
+        return _state.CreateOpt<T>();
     }
 
     public void SetSingleton<T>(T singleton)
@@ -321,8 +333,27 @@ public class Node
         contextValues.HandleContextChanged(val);
         if (ctx.Has<T>()) return;
         children.PropagateContextChanged(val);
-    } 
-    
+    }
+
+    private class State
+    {
+        private readonly List<IStateValue> _values = [];
+        
+        public StateValue<T> Create<T>(T initial)
+        {
+            var stateValue = new StateValue<T>(initial);
+            _values.Add(stateValue);
+            return stateValue;
+        }
+
+        public StateValueOptional<T> CreateOpt<T>()
+        {
+            var stateValue = new StateValueOptional<T>();
+            _values.Add(stateValue);
+            return stateValue;
+        }
+    }
+
     private class ContextValues
     {
         private readonly List<IContextValue> values = [];

@@ -158,6 +158,18 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             return @unchecked.Use<T>();
         }
 
+        public StateValueOptional<T> UseStateOpt<T>()
+        {
+            AssertNodeIsBuilding();
+            return @unchecked.UseStateOpt<T>();
+        }
+        
+        public StateValue<T> UseState<T>(T initial)
+        {
+            AssertNodeIsBuilding();
+            return @unchecked.UseState(initial);
+        }
+
         public void On<T>(Action callback)
         {
             AssertNodeIsBuilding();
