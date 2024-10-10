@@ -59,6 +59,25 @@ public static class Project
                                     dir += Vector2.Down;
                                 }
 
+                                if (Input.IsKeyJustPressed(KeyboardKey.Space))
+                                {
+                                    self.RuntimeRef.CreateChild(new Component(self =>
+                                    {
+                                        var transform = self.UseTransform2D();
+                                        var canvasItem = self.UseCanvasItem(transform);
+                                        
+                                        self.On<Update>(dt =>
+                                        {
+                                            transform.Get().Position += Vector2.Right * dt * 16;
+                                        });
+                                        
+                                        canvasItem.OnDraw(ctx =>
+                                        {
+                                            ctx.DrawRect(new Rect2I(-8, -8, 16, 16), Color.Red);
+                                        });
+                                    }));
+                                }
+
                                 dir = dir.Normalized();
                                 transform.Get().Position += dir * 10 * dt;
                             });

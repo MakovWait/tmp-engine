@@ -71,6 +71,8 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             @unchecked.SetId(id);
         }
 
+        public RuntimeNodeRef RuntimeRef => new(@unchecked);
+        
         public RuntimeNodeRef GetNodeById(string id)
         {
             AssertNodeIsReady();
