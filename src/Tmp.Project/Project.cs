@@ -123,7 +123,7 @@ public static class Project
                         //     });
                         // }),
                         {
-                            new CCamera2D(80, 45, new())
+                            new CCamera2D(80, 45)
                         },
                     },
                     new CCanvasItem(new()
@@ -214,7 +214,7 @@ public static class Project
                             });
                         });
                     }),
-                    new CCamera2D(400, 225, new())
+                    new CCamera2D(400, 225)
                 ];
             }));
         });

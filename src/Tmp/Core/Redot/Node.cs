@@ -13,25 +13,24 @@ internal enum NodeState
 
 public class Node
 {
-    private readonly Tree tree;
-    private readonly Context ctx;
-    private readonly Callbacks callbacksOn = new();
-    private readonly Callbacks callbacksAfter = new();
-    private readonly ContextValues contextValues = new();
-    private readonly LifecycleEffects lifecycleEffects = new();
-    private readonly Children children = new();
-    // TODO resolve collisions with NodeState
-    private readonly State _state = new();
+    private readonly Tree _tree;
+    private readonly Context _ctx;
+    private readonly Callbacks _callbacksOn = new();
+    private readonly Callbacks _callbacksAfter = new();
+    private readonly ContextValues _contextValues = new();
+    private readonly LifecycleEffects _lifecycleEffects = new();
+    private readonly Children _children = new();
+    private readonly ExportedVars _exportedVars = new();
     
-    private Node? parent;
-    private IId id = new IdEmpty();
-    private NodeState state = NodeState.Building;
-    private bool firstTimeEntersTree = true;
+    private Node? _parent;
+    private IId _id = new IdEmpty();
+    private NodeState _state = NodeState.Building;
+    private bool _firstTimeEntersTree = true;
 
     internal Node(Tree tree)
     {
-        ctx = new Context(this);
-        this.tree = tree;
+        _ctx = new Context(this);
+        this._tree = tree;
     }
     
     public void Call<T>() where T : new()
@@ -41,67 +40,67 @@ public class Node
     
     public void Call<T>(T state)
     {
-        callbacksOn.Call(state);
-        children.Call(state);
-        callbacksAfter.Call(state);
+        _callbacksOn.Call(state);
+        _children.Call(state);
+        _callbacksAfter.Call(state);
     }
 
     public ICreatedContextValue<T> CreateContext<T>(T val)
     {
-        ctx.Create(val);
-        return new CreatedContextValue<T>(ctx);
+        _ctx.Create(val);
+        return new CreatedContextValue<T>(_ctx);
     }
     
     public IContextValue<T> Use<T>()
     {
         var val = new ContextValue<T>(this);
-        contextValues.Add(val);
+        _contextValues.Add(val);
         return val;
     }
 
-    public StateValue<T> UseState<T>(T initial)
+    public ExportedVar<T> Export<T>(T initial)
     {
-        return _state.Create(initial);
+        return _exportedVars.Create(initial);
     }
     
-    public StateValueOptional<T> UseStateOpt<T>()
+    public ExportedVarOptional<T> ExportOpt<T>()
     {
-        return _state.CreateOpt<T>();
+        return _exportedVars.CreateOpt<T>();
     }
 
     public void SetSingleton<T>(T singleton)
     {
-        tree.SetSingleton(singleton);
+        _tree.SetSingleton(singleton);
     }
     
     public T UseSingleton<T>()
     {
-        return tree.UseSingleton<T>();
+        return _tree.UseSingleton<T>();
     }
     
     public void On<T>(Action<T> callback)
     {
-        callbacksOn.Add(callback);
+        _callbacksOn.Add(callback);
     }
     
     public void After<T>(Action<T> callback)
     {
-        callbacksAfter.Add(callback);
+        _callbacksAfter.Add(callback);
     }
 
     public void UseEffect(Effect effect)
     {
-        lifecycleEffects.Add(effect);
+        _lifecycleEffects.Add(effect);
     }
 
     public void SetId(string someId)
     {
-        id = new Id(someId, this);
+        _id = new Id(someId, this);
     }
 
     public RuntimeNodeRef GetNodeById(string nodeId)
     {
-        return new RuntimeNodeRef(tree.IdNodeDict.Get(nodeId));
+        return new RuntimeNodeRef(_tree.IdNodeDict.Get(nodeId));
     }
     
     public void UseEffect(Func<Action> effect, IEffectDependency deps)
@@ -112,7 +111,7 @@ public class Node
             deps.AboutToChange += Cleanup;
             deps.Changed += Trigger;
 
-            if (firstTimeEntersTree)
+            if (_firstTimeEntersTree)
             {
                 cleanup = effect();
             }
@@ -154,68 +153,68 @@ public class Node
 
     public IReadOnlyList<Node> GetChildren()
     {
-        return children.List;
+        return _children.List;
     }
 
     public Node? GetParent()
     {
-        return parent;
+        return _parent;
     }
     
     public T FindInContext<T>()
     {
-        if (parent == null)
+        if (_parent == null)
         {
             throw new Exception($"Unable to find a context value for {typeof(T)}");
         }
 
-        if (parent.ctx.Has<T>())
+        if (_parent._ctx.Has<T>())
         {
-            return parent.ctx.Get<T>();
+            return _parent._ctx.Get<T>();
         }
         
-        return parent!.FindInContext<T>();
+        return _parent!.FindInContext<T>();
     }
 
     public void CallDeferred(Action action)
     {
-        tree.CallDeferred(action);
+        _tree.CallDeferred(action);
     }
     
     public void CallDeferred(Action<Node> action)
     {
-        tree.CallDeferred(() => action(this));
+        _tree.CallDeferred(() => action(this));
     }
     
     internal bool StateIs(NodeState s)
     {
-        return state == s;
+        return _state == s;
     }
     
     private void StateSet(NodeState s)
     {
-        state = s;
+        _state = s;
     }
     
     private void ReparentInternal(Node newParent)
     {
-        Debug.Assert(newParent != parent);
-        parent?.RemoveChildInternal(this);
+        Debug.Assert(newParent != _parent);
+        _parent?.RemoveChildInternal(this);
         newParent.AddChildInternal(this);
     }
     
     private void AddChildInternal(Node child)
     {
-        Debug.Assert(child.parent is null);
-        child.parent = this;
-        children.Add(child);
+        Debug.Assert(child._parent is null);
+        child._parent = this;
+        _children.Add(child);
     }
     
     private void RemoveChildInternal(Node child)
     {
-        Debug.Assert(child.parent == this);
-        child.parent = null;
-        children.Remove(child);
+        Debug.Assert(child._parent == this);
+        child._parent = null;
+        _children.Remove(child);
     }
     
     public void CreateChild(IComponent component)
@@ -228,7 +227,7 @@ public class Node
     {
         PropagateOnExitTree();
         
-        var prevParent = parent;
+        var prevParent = _parent;
         prevParent!.RemoveChildInternal(this);
 
         var newParent = prevParent.CreateSubChild(component);
@@ -255,7 +254,7 @@ public class Node
 
     public void Undecorate()
     {
-        var curParent = parent!;
+        var curParent = _parent!;
         curParent.RemoveChild(this);
         
         foreach (var child in GetChildren().ToArray())
@@ -269,7 +268,7 @@ public class Node
 
     private Node CreateSubChild(IComponent component)
     {
-        var node = new Node(tree);
+        var node = new Node(_tree);
         var childComponents = component.Build(node);
         node.StateSet(NodeState.Built);
         foreach (var childComponent in childComponents)
@@ -283,24 +282,24 @@ public class Node
     
     private void OnEnterTree()
     {
-        id.SetTo(tree.IdNodeDict);
-        contextValues.Init();
-        lifecycleEffects.Invoke();
-        firstTimeEntersTree = false;
-        children.OnEnterTree();
+        _id.SetTo(_tree.IdNodeDict);
+        _contextValues.Init();
+        _lifecycleEffects.Invoke();
+        _firstTimeEntersTree = false;
+        _children.OnEnterTree();
     }
 
     private void PropagateOnExitTree()
     {
         OnExitTreeThisOnly();
-        children.OnExitTree();
+        _children.OnExitTree();
     }
     
     private void OnExitTreeThisOnly()
     {
-        lifecycleEffects.Cleanup();
-        contextValues.Uninitialize();
-        id.RemoveFrom(tree.IdNodeDict);
+        _lifecycleEffects.Cleanup();
+        _contextValues.Uninitialize();
+        _id.RemoveFrom(_tree.IdNodeDict);
     }
 
     public void SafeFree()
@@ -316,41 +315,41 @@ public class Node
         Debug.Assert(!StateIs(NodeState.Freed));
         StateSet(NodeState.Freed);
         OnExitTreeThisOnly();
-        parent?.RemoveChildInternal(this);
-        children.Free();
+        _parent?.RemoveChildInternal(this);
+        _children.Free();
     }
     
     public void QueueFree()
     {
         StateSet(NodeState.QueuedToDeletion);
-        tree.QueueFree(this);
+        _tree.QueueFree(this);
         // TODO ???????
         // children.QueueFree();
     }
 
     private void PropagateContextChanged<T>(T val)
     {
-        contextValues.HandleContextChanged(val);
-        if (ctx.Has<T>()) return;
-        children.PropagateContextChanged(val);
+        _contextValues.HandleContextChanged(val);
+        if (_ctx.Has<T>()) return;
+        _children.PropagateContextChanged(val);
     }
 
-    private class State
+    private class ExportedVars
     {
-        private readonly List<IStateValue> _values = [];
+        private readonly List<IExportedVar> _vars = [];
         
-        public StateValue<T> Create<T>(T initial)
+        public ExportedVar<T> Create<T>(T initial)
         {
-            var stateValue = new StateValue<T>(initial);
-            _values.Add(stateValue);
-            return stateValue;
+            var exported = new ExportedVar<T>(initial);
+            _vars.Add(exported);
+            return exported;
         }
 
-        public StateValueOptional<T> CreateOpt<T>()
+        public ExportedVarOptional<T> CreateOpt<T>()
         {
-            var stateValue = new StateValueOptional<T>();
-            _values.Add(stateValue);
-            return stateValue;
+            var exported = new ExportedVarOptional<T>();
+            _vars.Add(exported);
+            return exported;
         }
     }
 
@@ -520,7 +519,7 @@ public class Node
         public void Replace<T>(T val)
         {
             Create(val);
-            node.children.PropagateContextChanged(val);
+            node._children.PropagateContextChanged(val);
         }
     }
 

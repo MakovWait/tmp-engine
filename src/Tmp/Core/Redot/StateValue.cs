@@ -1,6 +1,6 @@
 namespace Tmp.Core.Redot;
 
-public sealed class StateValue<T>(T initial) : IStateValue
+public sealed class ExportedVar<T>(T initial) : IExportedVar
 {
     private T _value = initial;
     
@@ -8,10 +8,10 @@ public sealed class StateValue<T>(T initial) : IStateValue
     
     public void Set(T value) => _value = value;
     
-    public static implicit operator T(StateValue<T> self) => self._value;
+    public static implicit operator T(ExportedVar<T> self) => self._value;
 }
 
-public sealed class StateValueOptional<T> : IStateValue
+public sealed class ExportedVarOptional<T> : IExportedVar
 {
     private T? _value;
     
@@ -19,10 +19,10 @@ public sealed class StateValueOptional<T> : IStateValue
     
     public void Set(T value) => _value = value;
     
-    public static implicit operator T?(StateValueOptional<T> self) => self._value;
+    public static implicit operator T?(ExportedVarOptional<T> self) => self._value;
 }
 
-internal interface IStateValue
+internal interface IExportedVar
 {
     
 }
