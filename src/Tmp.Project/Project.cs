@@ -5,6 +5,7 @@ using Tmp.Math;
 using Tmp.Math.Components;
 using Tmp.Render;
 using Tmp.Render.Components;
+using Tmp.Resource.BuiltIn.Texture;
 using Tmp.Resource.Components;
 
 namespace Tmp.Project;
@@ -87,7 +88,7 @@ public static class Project
                                 var transform = self.UseTransform2D();
                                 var canvasItem = self.UseCanvasItem(transform);
 
-                                var texture = self.UseRes<Texture2D>("res://sheets.png");
+                                var texture = self.UseRes<ITexture2D>("res://test.toml");
                                 
                                 self.UseEffect(() =>
                                 {
@@ -105,12 +106,9 @@ public static class Project
                                     ctx.DrawRect(new Rect2I(new Vector2I(-6, -6), new Vector2I(12, 12)), Color.Blue);
                                     ctx.DrawLine(new Vector2(0, 0), new Vector2(0, 10), Color.Green);
                                     
-                                    texture.Get().DrawTextureRectRegion(
-                                        ctx, 
-                                        new Rect2(-16, -16, 32, 32), 
-                                        new Rect2(0, 0, 32, 32), 
-                                        Color.White
-                                    );
+                                    // var t = new TextureRegion2D(texture, new Rect2(0, 0, 32, 32));
+                                    // t.Draw(ctx, new Vector2(-16, -16), Color.White);
+                                    texture.Get().Draw(ctx, new Vector2(-16, -16), Color.White);
                                 });
                             });
                         }),

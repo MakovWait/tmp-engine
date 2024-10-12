@@ -37,6 +37,8 @@ public sealed class Res<T>(
     {
         return _value is TCastTarget y ? y : default;
     }
+    
+    public static implicit operator T(Res<T> self) => self.Get();
 }
 
 public interface IRes : IDisposable
@@ -58,24 +60,13 @@ public class ReloadConst<T>(T value) : IReloadSource<T>
 }
 
 public class ReloadDefault<TResource>(
-    IResourceLoader<TResource> loader,
+    IResourcesSource subResources,
+    IResourceLoader loader,
     ResourcePath path
 ) : IReloadSource<TResource>
 {
     public TResource Reload()
     {
-        return loader.Load(path);
-    }
-}
-
-public class ReloadDefault<TResource, TSettings>(
-    IResourceLoader<TResource, TSettings> loader,
-    ResourcePath path,
-    TSettings settings
-) : IReloadSource<TResource>
-{
-    public TResource Reload()
-    {
-        return loader.Load(path, settings);
+        return loader.Load<TResource>(path, subResources);
     }
 }
