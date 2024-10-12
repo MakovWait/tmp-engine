@@ -88,7 +88,7 @@ public static class Project
                                 var transform = self.UseTransform2D();
                                 var canvasItem = self.UseCanvasItem(transform);
 
-                                var texture = self.UseRes<ITexture2D>("res://test.toml");
+                                var texture = self.UseRes<ITexture2D>("res://test.gres");
                                 
                                 self.UseEffect(() =>
                                 {
