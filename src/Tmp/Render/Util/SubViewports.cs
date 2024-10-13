@@ -1,8 +1,8 @@
 namespace Tmp.Render.Util;
 
-public class SubViewports : ISubViewportContainer
+public class SubViewports(IViewport parent) : ISubViewportContainer
 {
-    private readonly List<SubViewport> _subViewports = [];
+    private readonly List<ISubViewportContainer.IItem> _subViewports = [];
     
     public void Draw()
     {
@@ -12,13 +12,15 @@ public class SubViewports : ISubViewportContainer
         }
     }
 
-    public void Add(SubViewport viewport)
+    public void Add(ISubViewportContainer.IItem viewport)
     {
         _subViewports.Add(viewport);
+        viewport.AttachToParent(parent);
     }
 
-    public void Remove(SubViewport viewport)
+    public void Remove(ISubViewportContainer.IItem viewport)
     {
         _subViewports.Remove(viewport);
+        viewport.ClearParent();
     }
 }

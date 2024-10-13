@@ -2,7 +2,16 @@
 
 public interface ISubViewportContainer
 {
-    void Add(SubViewport viewport);
+    void Add(IItem viewport);
     
-    void Remove(SubViewport viewport);
+    void Remove(IItem viewport);
+    
+    public interface IItem
+    {
+        public void AttachToParent(IViewport parent);
+
+        public void ClearParent();
+
+        public void Draw();
+    }
 }

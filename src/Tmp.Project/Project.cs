@@ -27,10 +27,7 @@ public static class Project
                     new CSubViewport(new()
                     {
                         Texture = subViewportTexture,
-                        ScreenWidth = 800,
-                        ScreenHeight = 450,
-                        VirtualWidth = 160,
-                        VirtualHeight = 90
+                        Size = new Vector2I(160, 90),
                     })
                     {
                         new Component(self =>
