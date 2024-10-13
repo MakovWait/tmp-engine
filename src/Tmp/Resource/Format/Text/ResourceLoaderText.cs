@@ -21,7 +21,7 @@ public class ResourceLoaderText : IResourceLoader
     {
         using var reader = File.OpenText(path.FilePath);
         var table = TOML.Parse(reader);
-        var node = path.Label.Equals("") ? table["self"] : table["subres"][path.Label];
+        var node = path.HasLabel ? table["subres"][path.Label] : table["self"];
         var type = node["__type__"];
         foreach (var deserializer in _deserializers)
         {
