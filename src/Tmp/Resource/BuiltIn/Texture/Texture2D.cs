@@ -3,6 +3,7 @@ using Tmp.IO;
 using Tmp.Math;
 using Tmp.Render;
 using Tmp.Resource.Format;
+using Tmp.Resource.Util;
 
 namespace Tmp.Resource.BuiltIn.Texture;
 
@@ -55,6 +56,11 @@ public sealed class Texture2D(FilePath texturePath) : IDisposable, ITexture2D
         public bool MatchType(string type)
         {
             return type == nameof(Texture2D);
+        }
+
+        public Y Deserialize<Y>(ISerializeInput input, IResultMapper<Y> resultMapper)
+        {
+            return resultMapper.Map(From(input));
         }
     }
 }

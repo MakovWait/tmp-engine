@@ -2,10 +2,11 @@ using Raylib_cs;
 using Tmp.Math;
 using Tmp.Render;
 using Tmp.Resource.Format;
+using Tmp.Resource.Util;
 
 namespace Tmp.Resource.BuiltIn.Texture;
 
-public class TextureRegion2D(Res<ITexture2D> origin, Rect2 srcRect) : ITexture2D, ISerializable
+public class TextureRegion2D(IRes<ITexture2D> origin, Rect2 srcRect) : ITexture2D, ISerializable
 {
     public void Draw(IDrawContext ctx, Vector2 position, Color modulate)
     {
@@ -36,6 +37,11 @@ public class TextureRegion2D(Res<ITexture2D> origin, Rect2 srcRect) : ITexture2D
                 input.ReadSubRes<ITexture2D>(nameof(origin)),
                 input.ReadRect2(nameof(srcRect))
             );
+        }
+
+        public Y Deserialize<Y>(ISerializeInput input, IResultMapper<Y> resultMapper)
+        {
+            return resultMapper.Map(From(input));
         }
 
         public bool MatchType(string type)

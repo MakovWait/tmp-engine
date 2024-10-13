@@ -1,4 +1,5 @@
 using Tmp.Math;
+using Tmp.Resource.Util;
 using Tommy;
 
 namespace Tmp.Resource.Format.Text;
@@ -17,7 +18,7 @@ public class ResourceLoaderText : IResourceLoader
         return path.Extension == "gres";
     }
 
-    public T Load<T>(ResourcePath path, IResourcesSource subResources)
+    public T Load<T>(ResourcePath path, IResourcesSource subResources, IResultMapper<T> resultMapper)
     {
         using var reader = File.OpenText(path.FilePath);
         var table = TOML.Parse(reader);
@@ -25,9 +26,10 @@ public class ResourceLoaderText : IResourceLoader
         var type = node["__type__"];
         foreach (var deserializer in _deserializers)
         {
-            if (deserializer.MatchType(type) && deserializer is IResourceDeserializer<T> deserialize)
+            if (deserializer.MatchType(type))
             {
-                return deserialize.From(new SerializeInputToml(subResources, node));
+                var input = new SerializeInputToml(subResources, node);
+                return deserializer.Deserialize(input, resultMapper);
             }
         }
         throw new Exception($"Can't deserialize {path}");
@@ -53,7 +55,7 @@ public class SerializeInputToml(IResourcesSource resources, TomlNode root) : ISe
         return loc.AsString.Value;
     }
 
-    public Res<T> ReadSubRes<T>(string name)
+    public IRes<T> ReadSubRes<T>(string name)
     {
         var loc = root[name];
         return resources.Load<T>(loc["path"].AsString.Value);

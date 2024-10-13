@@ -13,5 +13,5 @@ public interface ISerializeInput
     
     string ReadString(string name);
 
-    Res<T> ReadSubRes<T>(string name);
+    IRes<T> ReadSubRes<T>(string name);
 }

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using Tmp.Resource.Util;
 
 namespace Tmp.Resource;
 
@@ -6,15 +6,17 @@ public interface IResources : IDisposable, IResourcesSource
 {
     public void AddLoader(IResourceLoader loader);
 
-    public Res<T> AddDyn<T>(string name, T resource);
+    public IRes<T> AddDyn<T>(string name, T resource);
     
     public void Reload(ResourcePath path);
+    
+    public IRes Load(ResourcePath path);
 }
 
 // TODO stupid name
 public interface IResourcesSource
 {
-    public Res<T> Load<T>(ResourcePath path);
+    public IRes<T> Load<T>(ResourcePath path);
 }
 
 public sealed class Resources : IResources
@@ -27,7 +29,7 @@ public sealed class Resources : IResources
         _loaders.Add(loader);
     }
 
-    public Res<T> AddDyn<T>(string name, T resource)
+    public IRes<T> AddDyn<T>(string name, T resource)
     {
         ResourcePath path = Path.Join("dyn://", name);
         return RegisterRes(
@@ -40,12 +42,27 @@ public sealed class Resources : IResources
         );
     }
 
-    public Res<T> Load<T>(ResourcePath path)
+    public IRes<T> Load<T>(ResourcePath path)
     {
         if (_resources.ContainsKey(path))
         {
             return GetLoaded<T>(path);
         }
+        var res = Load(path);
+        return (IRes<T>)res;
+    }
+
+    public IRes Load(ResourcePath path)
+    {
+        if (_resources.ContainsKey(path))
+        {
+            return GetLoaded(path);
+        }
+        return Load(path, loader => new ResultMapperUntypedRes(this, path, loader));
+    }
+
+    private T Load<T>(ResourcePath path, Func<IResourceLoader, IResultMapper<T>> mapperCtor)
+    {
         if (path.IsDyn)
         {
             throw new ArgumentException("The dyn resource should be added manually first");
@@ -54,31 +71,21 @@ public sealed class Resources : IResources
         {
             if (loader.MatchPath(path))
             {
-                return RegisterRes(
-                    path,
-                    new Res<T>(
-                        loader.Load<T>(path, this),
-                        path,
-                        new ReloadDefault<T>(this, loader, path)
-                    )
-                );
+                return loader.Load(path, this, mapperCtor(loader));
             }
         }
-        
         throw new Exception("Loader not found!!1");
     }
 
-    private Res<T> GetLoaded<T>(ResourcePath path)
+    private IRes GetLoaded(ResourcePath path)
+    {
+        return _resources[path];
+    }
+    
+    private IRes<T> GetLoaded<T>(ResourcePath path)
     {
         var res = _resources[path];
-        if (res is Res<T> result)
-        {
-            return result;
-        }
-        else
-        {
-            throw new ArgumentException($"Resource type mismatch: requested {typeof(Res<T>)}, but found: {res.GetType()}");
-        }
+        return (IRes<T>)res;
     }
     
     private T RegisterRes<T>(ResourcePath path, T res) where T : IRes
@@ -100,6 +107,18 @@ public sealed class Resources : IResources
         foreach (var res in _resources.Values)
         {
             res.Dispose();
+        }
+    }
+
+    private class ResultMapperUntypedRes(Resources self, ResourcePath path, IResourceLoader loader) : IResultMapper<IRes>
+    {
+        public IRes Map<T>(T value)
+        {
+            return self.RegisterRes(path, new Res<T>(
+                value,
+                path,
+                new ReloadDefault<T>(self, loader, path)
+            ));
         }
     }
 }

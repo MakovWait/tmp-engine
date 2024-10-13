@@ -2,22 +2,22 @@ using System.Diagnostics;
 
 namespace Tmp.Resource;
 
-public sealed class Res<T>(
+internal sealed class Res<T>(
     T value,
-    ResourcePath? path,
-    IReloadSource<T> reloadSource
-) : IRes
+    ResourcePath path,
+    IReload<T> reload
+) : IRes<T>
 {
     private T _value = value;
     private bool _disposed;
     
-    public ResourcePath? Path { get; } = path;
+    public ResourcePath Path { get; } = path;
     
     public void Reload()
     {
         Debug.Assert(!_disposed);
         CastInnerTo<IDisposable>()?.Dispose();
-        _value = reloadSource.Reload();
+        _value = reload.Invoke();
     }
     
     public T Get()
@@ -37,23 +37,28 @@ public sealed class Res<T>(
     {
         return _value is TCastTarget y ? y : default;
     }
-    
-    public static implicit operator T(Res<T> self) => self.Get();
 }
 
 public interface IRes : IDisposable
 {
+    ResourcePath Path { get; }
+    
     void Reload();
 }
 
-public interface IReloadSource<out T>
+public interface IRes<out T> : IRes
 {
-    T Reload();
+    T Get();
 }
 
-public class ReloadConst<T>(T value) : IReloadSource<T>
+public interface IReload<out T>
 {
-    public T Reload()
+    T Invoke();
+}
+
+public class ReloadConst<T>(T value) : IReload<T>
+{
+    public T Invoke()
     {
         return value;
     }
@@ -63,9 +68,9 @@ public class ReloadDefault<TResource>(
     IResourcesSource subResources,
     IResourceLoader loader,
     ResourcePath path
-) : IReloadSource<TResource>
+) : IReload<TResource>
 {
-    public TResource Reload()
+    public TResource Invoke()
     {
         return loader.Load<TResource>(path, subResources);
     }
