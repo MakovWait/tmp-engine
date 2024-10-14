@@ -1,5 +1,6 @@
 using Raylib_cs;
 using Tmp.Core.Plugins;
+using Tmp.Core.Shelf;
 using Tmp.HotReload.Components;
 using Tmp.Resource;
 using Tmp.Resource.Components;
@@ -17,7 +18,7 @@ public readonly struct Draw;
 
 public class PluginTree(Action<Tree> initTree) : PluginWrap<App>(new PluginAnonymous<App>("tree")
 {
-    OnBuild = async app =>
+    OnBuild = app =>
     {
         var tree = new Tree();
         app.Shelf.Set(tree);
@@ -25,15 +26,10 @@ public class PluginTree(Action<Tree> initTree) : PluginWrap<App>(new PluginAnony
         {
             tree.DecorateRootUp(new CResources(new Resources()));
             tree.DecorateRootUp(new CHotReloadSource());
-            initTree(tree);
         };
         app.OnStart += () =>
         {
             tree.Init();
-        };
-        app.PreUpdate += () =>
-        {
-            Input.Propagate(tree);
         };
         app.OnUpdate += () =>
         {
@@ -49,5 +45,16 @@ public class PluginTree(Action<Tree> initTree) : PluginWrap<App>(new PluginAnony
         {
             tree.Free();
         };
+    },
+    
+    OnCleanup = app =>
+    {
+        app.Shelf.Inspect<Tree>(tree =>
+        {
+            tree.OnInit += _ =>
+            {
+                initTree(tree);  
+            };
+        });
     }
 });

@@ -36,4 +36,17 @@ public static class ShelfEx
 	{
 		return self.Val<T>().Map<T>(x => x, orElse());
 	}
+	
+	public static bool Inspect<T>(this IShelf self, Action<T> inspect)
+	{
+		if (self.Has<T>())
+		{
+			inspect(self.Get<T>());
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 }

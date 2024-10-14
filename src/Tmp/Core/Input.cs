@@ -1,23 +1,25 @@
 using Raylib_cs;
+using Tmp.Core.Plugins;
 using Tmp.Core.Redot;
+using Tmp.Core.Shelf;
 using Tmp.Math;
 
 namespace Tmp.Core;
 
-public static class Input
+public class Input
 {
     private static readonly HashSet<KeyboardKey> PressedKeys = [];
     private static readonly HashSet<KeyboardKey> ReleasedKeysThisFrame = [];
 
-    public static bool IsKeyJustPressed(KeyboardKey key) => Raylib.IsKeyPressed(key);
+    public bool IsKeyJustPressed(KeyboardKey key) => Raylib.IsKeyPressed(key);
 
-    public static bool IsKeyPressed(KeyboardKey key) => Raylib.IsKeyDown(key);
+    public bool IsKeyPressed(KeyboardKey key) => Raylib.IsKeyDown(key);
 
-    public static bool IsKeyUp(KeyboardKey key) => Raylib.IsKeyUp(key);
+    public bool IsKeyUp(KeyboardKey key) => Raylib.IsKeyUp(key);
 
-    public static bool IsKeyJustReleased(KeyboardKey key) => Raylib.IsKeyReleased(key);
+    public bool IsKeyJustReleased(KeyboardKey key) => Raylib.IsKeyReleased(key);
 
-    static internal void Propagate(Tree tree)
+    internal void Propagate(Tree tree)
     {
         var keyPressed = Raylib.GetKeyPressed();
         while (keyPressed != 0)
@@ -69,3 +71,27 @@ public readonly record struct InputEventKey(KeyboardKey KeyCode, bool Pressed, b
 
     public bool IsJustReleased() => Raylib.IsKeyReleased(KeyCode);
 }
+
+public class PluginInput() : PluginWrap<App>(new PluginAnonymous<App>("input")
+{
+    OnBuild = app =>
+    {
+        app.Shelf.Set(new Input());
+    },
+    
+    OnFinish = app =>
+    {
+        app.Shelf.Inspect<Tree>(tree =>
+        {
+            var input = app.Shelf.Get<Input>();
+            app.PreUpdate += () =>
+            {
+                input.Propagate(tree);
+            };
+            tree.OnInit += _ =>
+            {
+                tree.SetSingleton(input);
+            };
+        });
+    }
+});

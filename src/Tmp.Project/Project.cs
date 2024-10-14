@@ -24,6 +24,7 @@ public static class Project
                 Size = new Vector2I(800, 450),
                 TargetFps = 60
             }),
+            new PluginInput(),
             new PluginTree(InitTree),
         ]);
     }
@@ -60,31 +61,32 @@ public static class Project
                     new Component(self =>
                     {
                         var transform = self.UseTransform2D();
+                        var input = self.UseSingleton<Input>();
 
                         self.On<Update>(dt =>
                         {
                             var dir = new Vector2();
-                            if (Input.IsKeyPressed(KeyboardKey.D))
+                            if (input.IsKeyPressed(KeyboardKey.D))
                             {
                                 dir += Vector2.Right;
                             }
 
-                            if (Input.IsKeyPressed(KeyboardKey.A))
+                            if (input.IsKeyPressed(KeyboardKey.A))
                             {
                                 dir += Vector2.Left;
                             }
 
-                            if (Input.IsKeyPressed(KeyboardKey.W))
+                            if (input.IsKeyPressed(KeyboardKey.W))
                             {
                                 dir += Vector2.Up;
                             }
 
-                            if (Input.IsKeyPressed(KeyboardKey.S))
+                            if (input.IsKeyPressed(KeyboardKey.S))
                             {
                                 dir += Vector2.Down;
                             }
 
-                            if (Input.IsKeyJustPressed(KeyboardKey.Space))
+                            if (input.IsKeyJustPressed(KeyboardKey.Space))
                             {
                                 self.RuntimeRef.CreateChild(new Component(self =>
                                 {
@@ -177,26 +179,27 @@ public static class Project
                 new Component(self =>
                 {
                     var transform = self.UseTransform2D();
+                    var input = self.UseSingleton<Input>();
 
                     self.On<Update>(dt =>
                     {
                         var dir = new Vector2();
-                        if (Input.IsKeyPressed(KeyboardKey.D))
+                        if (input.IsKeyPressed(KeyboardKey.D))
                         {
                             dir += Vector2.Right;
                         }
 
-                        if (Input.IsKeyPressed(KeyboardKey.A))
+                        if (input.IsKeyPressed(KeyboardKey.A))
                         {
                             dir += Vector2.Left;
                         }
 
-                        if (Input.IsKeyPressed(KeyboardKey.W))
+                        if (input.IsKeyPressed(KeyboardKey.W))
                         {
                             dir += Vector2.Up;
                         }
 
-                        if (Input.IsKeyPressed(KeyboardKey.S))
+                        if (input.IsKeyPressed(KeyboardKey.S))
                         {
                             dir += Vector2.Down;
                         }

@@ -15,7 +15,7 @@ public class PluginWindow(
     WindowSettings settings
 ) : PluginWrap<App>(new PluginAnonymous<App>("raylib-window")
 {
-    OnBuild = async app =>
+    OnBuildAsync = async app =>
     {
         app.PreStart += () =>
         {

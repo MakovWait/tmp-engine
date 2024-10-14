@@ -13,25 +13,31 @@ public interface IPlugin<in T>
 
 public class PluginAnonymous<T>(string name) : IPlugin<T>, IPluginSource<T>
 {
-	public Func<T, Task>? OnBuild { get; init; }
-	public Func<T, Task>? OnFinish { get; init; }
-	public Func<T, Task>? OnCleanup { get; init; }
-
+	public Func<T, Task>? OnBuildAsync { get; init; }
+	public Func<T, Task>? OnFinishAsync { get; init; }
+	public Func<T, Task>? OnCleanupAsync { get; init; }
+	public Action<T>? OnBuild { get; init; }
+	public Action<T>? OnFinish { get; init; }
+	public Action<T>? OnCleanup { get; init; }
+	
 	public string Name { get; } = name;
 
 	public Task Build(T target)
 	{
-		return OnBuild?.Invoke(target) ?? Task.CompletedTask;
+		OnBuild?.Invoke(target);
+		return OnBuildAsync?.Invoke(target) ?? Task.CompletedTask;
 	}
 
 	public Task Finish(T target)
 	{
-		return OnFinish?.Invoke(target) ?? Task.CompletedTask;
+		OnFinish?.Invoke(target);
+		return OnFinishAsync?.Invoke(target) ?? Task.CompletedTask;
 	}
 
 	public Task Cleanup(T target)
 	{
-		return OnCleanup?.Invoke(target) ?? Task.CompletedTask;
+		OnCleanup?.Invoke(target);
+		return OnCleanupAsync?.Invoke(target) ?? Task.CompletedTask;
 	}
 
 	public Task AddTo(IPluginTarget<T> target)

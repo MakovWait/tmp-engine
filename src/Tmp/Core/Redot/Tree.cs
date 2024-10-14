@@ -5,7 +5,7 @@ namespace Tmp.Core.Redot;
 public class Tree
 {
     // TODO i dont like it
-    public Action<Tree>? OnInit;
+    public event Action<Tree>? OnInit;
     
     private readonly Node root;
     private readonly Node hiddenRoot;
