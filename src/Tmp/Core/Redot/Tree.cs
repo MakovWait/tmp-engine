@@ -4,6 +4,9 @@ namespace Tmp.Core.Redot;
 
 public class Tree
 {
+    // TODO i dont like it
+    public Action<Tree>? OnInit;
+    
     private readonly Node root;
     private readonly Node hiddenRoot;
     private readonly FreeQueue freeQueue = new();
@@ -20,6 +23,11 @@ public class Tree
         root = new Node(this);
         hiddenRoot.AddChild(root);
         idNodeDict.Put("root", root);
+    }
+
+    public void Init()
+    {
+        OnInit?.Invoke(this);
     }
     
     public void Update()

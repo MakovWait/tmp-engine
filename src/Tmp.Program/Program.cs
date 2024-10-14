@@ -1,8 +1,5 @@
 ﻿using Tmp;
 using Tmp.Project;
 
-var game = new Game();
-
-Project.Init(game);
-
-game.Run();
+var app = new App(Project.GetPlugins());
+await app.Run();
