@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Raylib_cs;
+using Tmp.Math;
 
 namespace Tmp.Window.Rl;
 
@@ -15,7 +16,20 @@ internal class WindowRl : IWindow
         );
         Raylib.SetTargetFPS(settings.TargetFps ?? 60);      
     }
+
+    public Vector2I Size => new(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
     
+    public void BeginDraw()
+    {
+        Raylib.ClearBackground(Color.White);
+        Raylib.BeginDrawing();
+    }
+
+    public void EndDraw()
+    {
+        Raylib.EndDrawing();
+    }
+
     public void Close()
     {
        Raylib.CloseWindow();
@@ -25,7 +39,14 @@ internal class WindowRl : IWindow
 public class WindowsRl : IWindows
 {
     private WindowRl? _current;
-    
+
+    public IWindow MainWindow => _current!;
+
+    public void Close()
+    {
+        _current?.Close();
+    }
+
     public IWindow Create(WindowSettings settings)
     {
         Debug.Assert(_current == null);

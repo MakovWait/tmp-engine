@@ -5,17 +5,28 @@ using Tmp.Render.Util;
 
 namespace Tmp.Render;
 
+public interface IRenderTarget
+{
+    Vector2I Size { get; }
+    
+    void BeginDraw();
+
+    void EndDraw();
+}
+
 public class Viewport : IViewport
 {
+    private readonly IRenderTarget _target;
     private readonly SubViewports _subViewports;
     private readonly Canvas _canvas = new();
     private readonly CanvasLayers _canvasLayers = new();
     private readonly Camera2D _camera = new();
     
-    public Vector2I Size => new(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+    public Vector2I Size => _target.Size;
 
-    public Viewport()
+    public Viewport(IRenderTarget target)
     {
+        _target = target;
         _subViewports = new SubViewports(this);
     }
     
@@ -23,16 +34,15 @@ public class Viewport : IViewport
     {
         _subViewports.Draw();
 
-        Raylib.ClearBackground(Color.White);
-        Raylib.BeginDrawing();
-
+        _target.BeginDraw();
+        
         Raylib.BeginMode2D(_camera);
         _canvas.Draw();
         Raylib.EndMode2D();
-
+        
         _canvasLayers.Draw();
-
-        Raylib.EndDrawing();
+        
+        _target.EndDraw();
     }
 
     internal void CreateContext(Component.Self self)

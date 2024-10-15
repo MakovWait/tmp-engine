@@ -31,7 +31,6 @@ public static class Project
 
     private static void InitTree2(Tree tree)
     {
-        tree.DecorateRootUp(new CViewport());
         tree.DecorateRootUp(new CNode2DTransformRoot());
         tree.AttachToRoot(new CCanvasItem(new()
         {
@@ -44,7 +43,6 @@ public static class Project
     
     private static void InitTree(Tree tree)
     {
-        tree.DecorateRootUp(new CViewport());
         tree.DecorateRootUp(new CNode2DTransformRoot());
         tree.AttachToRoot(new Component(self =>
         {

@@ -1,6 +1,8 @@
 using Tmp.Core.Plugins;
+using Tmp.Core.Redot;
 using Tmp.Core.Shelf;
 using Tmp.Math;
+using Tmp.Render.Components;
 using Tmp.Window.Rl;
 
 namespace Tmp.Window;
@@ -21,8 +23,17 @@ public class PluginWindow(
         var windows = app.Shelf.Get<IWindows>(() => new WindowsRl());
         app.PreStart += () =>
         {
-            var window = windows.Create(settings);  
-            app.PostClose += window.Close;
+            windows.Create(settings);
         };
+        
+        app.PostClose += windows.Close;
+
+        app.Shelf.Inspect<Tree>(tree =>
+        {
+            tree.OnInit += _ =>
+            {
+                tree.DecorateRootUp(new CViewport(windows.MainWindow));
+            };
+        });
     }
 });

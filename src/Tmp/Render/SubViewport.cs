@@ -95,7 +95,7 @@ public class SubViewport : IViewport
         }
 
         private Rect2 Source => new(0, 0, subViewport._target.Texture.Width, -subViewport._target.Texture.Height);
-        private _Texture2D TargetTexture => subViewport._target.Texture;
+        public _Texture2D TargetTexture => subViewport._target.Texture;
     }
 
     private class ContainerItem(SubViewport self) : ISubViewportContainer.IItem
