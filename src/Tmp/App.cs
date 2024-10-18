@@ -60,7 +60,7 @@ public sealed class App : IRunnableApp
        PostClose?.Invoke();
     }
 
-    private async Task InstallPlugins()
+    async private Task InstallPlugins()
     {
         await _pluginsToInstall.AddTo(_installedPlugins);
         await _installedPlugins.Finish();
