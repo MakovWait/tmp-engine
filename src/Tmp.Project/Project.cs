@@ -5,7 +5,6 @@ using Tmp.Core.Plugins.Sources;
 using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Math.Components;
-using Tmp.Render;
 using Tmp.Render.Components;
 using Tmp.Resource.BuiltIn.Texture;
 using Tmp.Resource.Components;
@@ -31,7 +30,7 @@ public static class Project
 
     private static void InitTree2(Tree tree)
     {
-        tree.DecorateRootUp(new CViewport());
+        // tree.DecorateRootUp(new CViewport());
         tree.DecorateRootUp(new CNode2DTransformRoot());
         tree.AttachToRoot(new CCanvasItem(new()
         {
@@ -39,22 +38,36 @@ public static class Project
             {
                 ctx.DrawFps();
             }
-        }));
+        })
+        {
+            new CCanvasLayer()
+            {
+                new CCanvasItem(new()
+                {
+                    OnDraw = ctx =>
+                    {
+                        ctx.DrawFps();
+                    }
+                })  
+            },
+            new CCamera2D(400, 225)
+        });
     }
     
     private static void InitTree(Tree tree)
     {
-        tree.DecorateRootUp(new CViewport());
+        // tree.DecorateRootUp(new CViewport());
         tree.DecorateRootUp(new CNode2DTransformRoot());
         tree.AttachToRoot(new Component(self =>
         {
-            var subViewportTexture = new DeferredValue<SubViewport.Texture>();
+            var subViewportTexture = new DeferredValue<ITexture2D>();
 
             return
             [
                 new CSubViewport(new()
                 {
                     Texture = subViewportTexture,
+                    // Size = new Vector2I(160, 90),
                     Size = new Vector2I(160, 90),
                 })
                 {

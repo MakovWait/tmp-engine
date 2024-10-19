@@ -14,19 +14,19 @@ public class SubViewport : IViewport
     private readonly Canvas _canvas = new();
     private readonly Camera2D _camera = new();
     private readonly ContainerItem _containerItem;
-    private readonly Vector2I _size;
-    private readonly IDeferredValueMut<Texture> _texture;
-
-    private _RenderTexture2D _target;
-
+    private readonly SubViewportTexture _texture;
+    
+    private Vector2I _size;
+    
     public Vector2I Size => _size;
-    private Vector2I ParentViewportSize => _containerItem.Parent!.Size;
-
-    public SubViewport(Vector2I size, IDeferredValueMut<Texture> texture)
+    public _RenderTexture2D RenderTarget => _texture.Target;
+    public ITexture2D Texture => _texture;
+    
+    public SubViewport(Vector2I size)
     {
         _size = size;
-        _texture = texture;
         
+        _texture = new SubViewportTexture(this);
         _containerItem = new ContainerItem(this);
         _subViewports = new SubViewports(this);
     }
@@ -43,20 +43,25 @@ public class SubViewport : IViewport
 
     public void Load()
     {
-        _target = Raylib.LoadRenderTexture(_size.X, _size.Y);
-        _texture.Set(new Texture(this));
+        _texture.Load(_size);
     }
 
     public void Unload()
     {
-        Raylib.UnloadRenderTexture(_target);
+        _texture.Unload();
+    }
+
+    public void Resize(Vector2I size)
+    {
+        _size = size;
+        _texture.Reload(_size);
     }
 
     public void Draw()
     {
         _subViewports.Draw();
 
-        Raylib.BeginTextureMode(_target);
+        Raylib.BeginTextureMode(RenderTarget);
         Raylib.ClearBackground(Color.Black);
 
         Raylib.BeginMode2D(_camera);
@@ -77,11 +82,33 @@ public class SubViewport : IViewport
         self.CreateContext<IViewport>(this);
     }
 
-    public class Texture(SubViewport subViewport) : ITexture2D
+    public class SubViewportTexture(SubViewport subViewport) : ITexture2D
     {
+        private _RenderTexture2D? _target;
+        public _RenderTexture2D Target => _target!.Value;
+        
+        public void Reload(Vector2I size)
+        {
+            Unload();
+            Load(size);
+        }
+
+        public void Unload()
+        {
+            if (_target != null)
+            {
+                Raylib.UnloadRenderTexture(_target.Value);
+            }
+        }
+
+        public void Load(Vector2I size)
+        {
+            _target = Raylib.LoadRenderTexture(size.X, size.Y);
+        }
+        
         public void Draw(IDrawContext ctx, Vector2 position, Color modulate)
         {
-            ctx.DrawTextureRectRegion(TargetTexture, new Rect2(position, subViewport.ParentViewportSize), Source, modulate);
+            ctx.DrawTextureRectRegion(TargetTexture, Dest, Source, modulate);
         }
 
         public void DrawTextureRect(IDrawContext ctx, Rect2 rect, Color modulate)
@@ -94,8 +121,9 @@ public class SubViewport : IViewport
             ctx.DrawTextureRectRegion(TargetTexture, rect, Source, modulate);
         }
 
-        private Rect2 Source => new(0, 0, subViewport._target.Texture.Width, -subViewport._target.Texture.Height);
-        private _Texture2D TargetTexture => subViewport._target.Texture;
+        private Rect2 Source => new(0, 0, Target.Texture.Width, -Target.Texture.Height);
+        private Rect2 Dest => new(0, 0, Target.Texture.Width, Target.Texture.Height);
+        private _Texture2D TargetTexture => Target.Texture;
     }
 
     private class ContainerItem(SubViewport self) : ISubViewportContainer.IItem

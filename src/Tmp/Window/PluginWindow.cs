@@ -1,6 +1,8 @@
-using Raylib_cs;
 using Tmp.Core.Plugins;
+using Tmp.Core.Redot;
+using Tmp.Core.Shelf;
 using Tmp.Math;
+using Tmp.Window.Rl;
 
 namespace Tmp.Window;
 
@@ -15,18 +17,29 @@ public class PluginWindow(
     WindowSettings settings
 ) : PluginWrap<App>(new PluginAnonymous<App>("raylib-window")
 {
-    OnBuildAsync = async app =>
+    OnFinish = app =>
     {
-        app.PreStart += () =>
+        var windows = app.Get<IWindows>(() => new WindowsRl());
+        var window = windows.Create(settings);
+        var viewport = window.Viewport;
+        
+        app.Inspect<Tree>(tree =>
         {
-            Raylib.SetConfigFlags(ConfigFlags.TopmostWindow | ConfigFlags.ResizableWindow);
-            Raylib.InitWindow(
-                settings.Size?.X ?? 800,
-                settings.Size?.Y ?? 450,
-                settings.Title ?? "Game"
-            );
-            Raylib.SetTargetFPS(settings.TargetFps ?? 60);            
-        };
-        app.PostClose += Raylib.CloseWindow;
+            tree.OnInit += _ =>
+            {
+                tree.DecorateRootUp(new Component(self =>
+                {
+                    viewport.CreateContext(self);
+                
+                    self.UseEffect(() =>
+                    {
+                        viewport.Load();
+                        return () => viewport.Unload();
+                    }, []);
+                
+                    self.On<Draw>(() => window.Update());
+                }));  
+            };
+        });
     }
 });

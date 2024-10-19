@@ -3,7 +3,7 @@ using Tmp.Core.Shelf;
 
 namespace Tmp;
 
-public sealed class App : IRunnableApp
+public sealed class App : IRunnableApp, IShelf
 {
     public event Action? PreStart;
     public event Action? OnStart;
@@ -64,6 +64,36 @@ public sealed class App : IRunnableApp
     {
         await _pluginsToInstall.AddTo(_installedPlugins);
         await _installedPlugins.Finish();
+    }
+
+    void IShelf.Set<T>(T value)
+    {
+        _shelf.Set(value);
+    }
+
+    T IShelf.Get<T>()
+    {
+        return _shelf.Get<T>();
+    }
+
+    bool IShelf.Has<T>()
+    {
+        return _shelf.Has<T>();
+    }
+
+    void IShelf.Del<T>()
+    {
+        _shelf.Del<T>();
+    }
+
+    IDisposable IShelf.OnDel<T>(Action<T> callback)
+    {
+        return _shelf.OnDel(callback);
+    }
+
+    IDisposable IShelf.OnSet<T>(Action<T> callback)
+    {
+        return _shelf.OnSet(callback);
     }
 }
 
