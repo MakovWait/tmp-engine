@@ -19,7 +19,7 @@ public class Input
 
     public bool IsKeyJustReleased(KeyboardKey key) => Raylib.IsKeyReleased(key);
 
-    internal void Propagate(Tree tree)
+    internal void Propagate(Node tree)
     {
         var keyPressed = Raylib.GetKeyPressed();
         while (keyPressed != 0)
@@ -76,22 +76,14 @@ public class PluginInput() : PluginWrap<App>(new PluginAnonymous<App>("input")
 {
     OnBuild = app =>
     {
-        app.SetVal(new Input());
-    },
-    
-    OnFinish = app =>
-    {
-        app.Val<Tree>().Inspect(tree =>
+        var input = new Input();
+        app.SetSingleton(input);
+        app.DecorateRootUp(new Component(self =>
         {
-            var input = app.Val<Input>().Get();
-            app.PreUpdate += () =>
+            self.On<PreUpdate>(_ =>
             {
-                input.Propagate(tree);
-            };
-            tree.OnInit += _ =>
-            {
-                tree.SetSingleton(input);
-            };
-        });
+                input.Propagate(self.Unchecked);
+            });
+        }));
     }
 });

@@ -4,80 +4,90 @@ namespace Tmp.Core.Redot;
 
 public class Tree
 {
-    // TODO i dont like it
-    public event Action<Tree>? OnInit;
-    
-    private readonly Node root;
-    private readonly Node hiddenRoot;
-    private readonly FreeQueue freeQueue = new();
-    private readonly Queue<Action> callQueue = new();
-    private readonly Queue<Action> callDeferredQueue = new();
-    private readonly IdNodeDict idNodeDict = new();
+    private readonly Node _root;
+    private readonly Node _hiddenRoot;
+    private readonly FreeQueue _freeQueue = new();
+    private readonly Queue<Action> _callQueue = new();
+    private readonly Queue<Action> _callDeferredQueue = new();
+    private readonly IdNodeDict _idNodeDict = new();
     private readonly Dictionary<Type, object> _singletons = new();
+    private readonly Queue<Action<Tree>> _builders = new();
 
-    internal IIdNodeDict IdNodeDict => idNodeDict;
-
-    public Tree()
+    internal IIdNodeDict IdNodeDict => _idNodeDict;
+    private bool _isReady;
+    
+    public Tree(bool isReady=true)
     {
-        hiddenRoot = new Node(this);
-        root = new Node(this);
-        hiddenRoot.AddChild(root);
-        idNodeDict.Put("root", root);
+        _isReady = isReady;
+        _hiddenRoot = new Node(this);
+        _root = new Node(this);
+        _hiddenRoot.AddChild(_root);
+        _idNodeDict.Put("root", _root);
     }
 
-    public void Init()
+    public void Build()
     {
-        OnInit?.Invoke(this);
+        while (_builders.Count > 0)
+        {
+            _builders.Dequeue()(this);
+        }
+        _isReady = true;
+        _hiddenRoot.OnEnterTree();
     }
     
     public void Update()
     {
-        while (callQueue.Count > 0)
+        while (_callQueue.Count > 0)
         {
-            callQueue.Dequeue()();
+            _callQueue.Dequeue()();
         }
 
-        while (callDeferredQueue.Count > 0)
+        while (_callDeferredQueue.Count > 0)
         {
-            callDeferredQueue.Dequeue()();
+            _callDeferredQueue.Dequeue()();
         }
 
-        freeQueue.DequeueAll();
+        _freeQueue.DequeueAll();
     }
     
     public void AttachToRoot(IComponent component)
     {
-        root.CreateChild(component);
+        _root.CreateChild(component);
     }
     
     public void DecorateRootUp(IComponent component)
     {
-        root.DecorateUp(component);
+        _root.DecorateUp(component);
     }
 
     public void Free()
     {
-        hiddenRoot.SafeFree();
+        _hiddenRoot.SafeFree();
     }
     
     public void Call<T>() where T : new()
     {
-        hiddenRoot.Call(new T());
+        _hiddenRoot.Call(new T());
     }
     
     public void Call<T>(T state)
     {
-        hiddenRoot.Call(state);
+        _hiddenRoot.Call(state);
     }
 
     internal void CallDeferred(Action action)
     {
-        callDeferredQueue.Enqueue(action);
+        _callDeferredQueue.Enqueue(action);
+    }
+
+    internal void QueueBuild(Action<Tree> build)
+    {
+        _builders.Enqueue(build);
     }
     
     internal void QueueFree(Node node)
     {
-        freeQueue.Add(node);
+        _freeQueue.Add(node);
     }
 
     public void SetSingleton<T>(T singleton)
@@ -90,6 +100,20 @@ public class Tree
     {
         return (T)_singletons[typeof(T)];
     }
+
+    public bool IsBuilding()
+    {
+        return !_isReady;
+    }
+}
+
+public interface ITreeBuilder
+{
+    void SetSingleton<T>(T singleton);
+    
+    void DecorateRootUp(IComponent component);
+
+    void AttachToRoot(IComponent component);
 }
 
 internal class FreeQueue

@@ -1,23 +1,35 @@
+using Raylib_cs;
 using Tmp.Core.Plugins;
+using Tmp.Core.Redot;
 using Tmp.Core.Shelf;
 
 namespace Tmp;
 
-public sealed class App : IRunnableApp, IShelf
+public readonly record struct PreUpdate(float Dt)
 {
-    public event Action? PreStart;
-    public event Action? OnStart;
-    
-    public event Action? PreUpdate;
-    public event Action? OnUpdate;
-    public event Action? PostUpdate;
-    
-    public event Action? OnClose;
-    public event Action? PostClose;
+    public static implicit operator float(PreUpdate self) => self.Dt;
+}
 
+public readonly record struct Update(float Dt)
+{
+    public static implicit operator float(Update self) => self.Dt;
+}
+
+public readonly record struct PostUpdate(float Dt)
+{
+    public static implicit operator float(PostUpdate self) => self.Dt;
+}
+
+public readonly record struct PreDraw;
+public readonly record struct Draw;
+public readonly record struct PostDraw;
+
+public sealed class App : IRunnableApp, IShelf, ITreeBuilder
+{
     private readonly IPluginSource<App> _pluginsToInstall;
     private readonly InstalledPluginsFor<App> _installedPlugins;
-    private readonly IShelf _shelf = new Shelf();
+    private readonly Shelf _shelf = new();
+    private readonly Tree _tree = new(isReady: false);
     private IAppRunner _runner = new IAppRunner.Default();
     
     public bool ShouldClose { get; set; }
@@ -41,21 +53,23 @@ public sealed class App : IRunnableApp, IShelf
 
     public void Start()
     {
-        PreStart?.Invoke();
-        OnStart?.Invoke();
+        _tree.Build();
     }
 
     public void Update()
     {
-        PreUpdate?.Invoke();
-        OnUpdate?.Invoke();
-        PostUpdate?.Invoke();
+        _tree.Call(new PreUpdate(Raylib.GetFrameTime()));
+        _tree.Call(new Update(Raylib.GetFrameTime()));
+        _tree.Call(new PostUpdate(Raylib.GetFrameTime()));
+
+        _tree.Call<PreDraw>();
+        _tree.Call<Draw>();
+        _tree.Call<PostDraw>();
     }
 
     public void Close()
     {
-       OnClose?.Invoke();
-       PostClose?.Invoke();
+        _tree.Free();
     }
 
     async private Task InstallPlugins()
@@ -92,6 +106,21 @@ public sealed class App : IRunnableApp, IShelf
     IDisposable IShelf.OnSet<T>(Action<T> callback)
     {
         return _shelf.OnSet(callback);
+    }
+
+    public void SetSingleton<T>(T singleton)
+    {
+        _tree.QueueBuild(tree => tree.SetSingleton(singleton));
+    }
+
+    public void DecorateRootUp(IComponent component)
+    {
+        _tree.QueueBuild(tree => tree.DecorateRootUp(component));
+    }
+
+    public void AttachToRoot(IComponent component)
+    {
+        _tree.QueueBuild(tree => tree.AttachToRoot(component));
     }
 }
 

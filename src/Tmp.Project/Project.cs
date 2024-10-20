@@ -28,7 +28,7 @@ public static class Project
         ]);
     }
 
-    private static void InitTree2(Tree tree)
+    private static void InitTree2(App tree)
     {
         // tree.DecorateRootUp(new CViewport());
         tree.DecorateRootUp(new CNode2DTransformRoot());
@@ -54,7 +54,7 @@ public static class Project
         });
     }
     
-    private static void InitTree(Tree tree)
+    private static void InitTree(App tree)
     {
         // tree.DecorateRootUp(new CViewport());
         tree.DecorateRootUp(new CNode2DTransformRoot());

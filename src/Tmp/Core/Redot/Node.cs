@@ -280,8 +280,9 @@ public class Node
         return node;
     }
     
-    private void OnEnterTree()
+    internal void OnEnterTree()
     {
+        if (_tree.IsBuilding()) return;
         _id.SetTo(_tree.IdNodeDict);
         _contextValues.Init();
         _lifecycleEffects.Invoke();
@@ -291,6 +292,7 @@ public class Node
 
     private void PropagateOnExitTree()
     {
+        if (_tree.IsBuilding()) return;
         OnExitTreeThisOnly();
         _children.OnExitTree();
     }

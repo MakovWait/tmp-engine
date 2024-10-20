@@ -129,6 +129,11 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
         {
             UseEffect(effect, new EffectDependencies(deps));
         }
+
+        public void UseCleanup(Action cleanup)
+        {
+            UseEffect(() => cleanup, []);
+        }
         
         public void UseEffect(Func<Action> effect, IEffectDependency deps)
         {
