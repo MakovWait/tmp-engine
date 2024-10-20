@@ -2,5 +2,9 @@ namespace Tmp.Window;
 
 public interface IWindows
 {
-    IWindow Create(WindowSettings settings);
+    IWindow Main { get; }
+
+    void Start(WindowSettings settings);
+    
+    void Close();
 }

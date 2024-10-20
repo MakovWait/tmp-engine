@@ -1,10 +1,9 @@
-using Tmp.Render;
-
 namespace Tmp.Window;
 
 public interface IWindow
 {
-    SubViewport Viewport { get; }
+    // TODO 🥶
+    AppViewport Viewport { get; }
 
-    void Update();
+    void Draw();
 }

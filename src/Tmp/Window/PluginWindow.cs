@@ -20,26 +20,38 @@ public class PluginWindow(
     OnFinish = app =>
     {
         var windows = app.Get<IWindows>(() => new WindowsRl());
-        var window = windows.Create(settings);
-        var viewport = window.Viewport;
-        
+
+        app.PreStart += () =>
+        {
+            windows.Start(settings);
+        };
+
         app.Inspect<Tree>(tree =>
         {
             tree.OnInit += _ =>
             {
+                var window = windows.Main;
+                var viewport = window.Viewport;
+                
                 tree.DecorateRootUp(new Component(self =>
                 {
-                    viewport.CreateContext(self);
+                    viewport.BindTo(self);
                 
+                    // TODO 🥶
                     self.UseEffect(() =>
                     {
                         viewport.Load();
                         return () => viewport.Unload();
                     }, []);
                 
-                    self.On<Draw>(() => window.Update());
+                    self.On<Draw>(() => window.Draw());
                 }));  
             };
         });
+        
+        app.PostClose += () =>
+        {
+            windows.Close();
+        };
     }
 });

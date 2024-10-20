@@ -73,7 +73,7 @@ public class SubViewport : IViewport
         Raylib.EndTextureMode();
     }
 
-    internal void CreateContext(Component.Self self)
+    internal void BindTo(Component.Self self)
     {
         self.CreateContext<ICanvasItemContainer>(_canvas);
         self.CreateContext<ICanvasLayerContainer>(_canvasLayers);

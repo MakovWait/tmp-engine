@@ -12,7 +12,7 @@ public class CSubViewport(CSubViewport.Props props) : Component(self =>
     var viewport = new SubViewport(
         props.Size
     );
-    viewport.CreateContext(self);
+    viewport.BindTo(self);
     
     self.CreateContext(new СNode2DTransform
     {
