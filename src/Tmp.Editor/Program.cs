@@ -4,6 +4,7 @@ using rlImGui_cs;
 using Tmp;
 using Tmp.Core.Plugins;
 using Tmp.Core.Plugins.Sources;
+using Tmp.Core.Shelf;
 using Tmp.Math;
 using Tmp.Project;
 using Tmp.Render;
@@ -19,7 +20,7 @@ internal class DebugEditor() : PluginWrap<App>(new PluginAnonymous<App>("debug-e
 {
     OnBuild = app =>
     {
-        app.Shelf.Set<IWindows>(new WindowsImGui());
+        app.SetVal<IWindows>(new WindowsImGui());
     }
 });
 
@@ -32,17 +33,17 @@ internal class WindowImGui(AppViewport viewport) : IWindow, IAppViewportTarget
         Raylib.BeginDrawing();
         rlImGui.Begin();
         Raylib.ClearBackground(Color.White);
-        
+
         if (ImGui.Begin("Game"))
         {
-            var region = ImGui.GetContentRegionAvail(); 
+            var region = ImGui.GetContentRegionAvail();
             viewport.Draw(
                 new Vector2I(region.X.ToInt(), region.Y.ToInt()),
                 this
             );
             ImGui.End();
         }
-        
+
         rlImGui.End();
         Raylib.EndDrawing();
     }
@@ -61,7 +62,7 @@ internal class WindowImGui(AppViewport viewport) : IWindow, IAppViewportTarget
 internal class WindowsImGui : IWindows
 {
     private IWindow? _window;
-    
+
     public IWindow Main => _window!;
 
     public void Start(WindowSettings settings)

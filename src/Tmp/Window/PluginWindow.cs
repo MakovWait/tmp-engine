@@ -19,14 +19,14 @@ public class PluginWindow(
 {
     OnFinish = app =>
     {
-        var windows = app.Get<IWindows>(() => new WindowsRl());
+        var windows = app.Val<IWindows>().GetOr(() => new WindowsRl());
 
         app.PreStart += () =>
         {
             windows.Start(settings);
         };
 
-        app.Inspect<Tree>(tree =>
+        app.Val<Tree>().Inspect(tree =>
         {
             tree.OnInit += _ =>
             {

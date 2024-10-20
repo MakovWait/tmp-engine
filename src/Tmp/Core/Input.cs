@@ -76,14 +76,14 @@ public class PluginInput() : PluginWrap<App>(new PluginAnonymous<App>("input")
 {
     OnBuild = app =>
     {
-        app.Shelf.Set(new Input());
+        app.SetVal(new Input());
     },
     
     OnFinish = app =>
     {
-        app.Shelf.Inspect<Tree>(tree =>
+        app.Val<Tree>().Inspect(tree =>
         {
-            var input = app.Shelf.Get<Input>();
+            var input = app.Val<Input>().Get();
             app.PreUpdate += () =>
             {
                 input.Propagate(tree);

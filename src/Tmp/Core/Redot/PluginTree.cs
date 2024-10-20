@@ -21,7 +21,7 @@ public class PluginTree(Action<Tree> initTree) : PluginWrap<App>(new PluginAnony
     OnBuild = app =>
     {
         var tree = new Tree();
-        app.Shelf.Set(tree);
+        app.SetVal(tree);
         tree.OnInit += _ =>
         {
             tree.DecorateRootUp(new CResources(new Resources()));
@@ -49,7 +49,7 @@ public class PluginTree(Action<Tree> initTree) : PluginWrap<App>(new PluginAnony
     
     OnCleanup = app =>
     {
-        app.Shelf.Inspect<Tree>(tree =>
+        app.Val<Tree>().Inspect(tree =>
         {
             tree.OnInit += _ =>
             {

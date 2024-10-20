@@ -19,8 +19,6 @@ public sealed class App : IRunnableApp, IShelf
     private readonly InstalledPluginsFor<App> _installedPlugins;
     private readonly IShelf _shelf = new Shelf();
     private IAppRunner _runner = new IAppRunner.Default();
-
-    public IShelf Shelf => _shelf;
     
     public bool ShouldClose { get; set; }
 
@@ -99,8 +97,6 @@ public sealed class App : IRunnableApp, IShelf
 
 public interface IRunnableApp
 {
-    IShelf Shelf { get; }
-    
     bool ShouldClose { get; set; }
     
     void Start();

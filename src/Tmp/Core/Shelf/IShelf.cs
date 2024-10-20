@@ -22,31 +22,9 @@ public static class ShelfEx
 		return new ShelfValue<T>(self);
 	}
 	
-	public static Y Map<T, Y>(this IShelf self, Func<T, Y> map, Y @default = default!)
+	public static ShelfValue<T> SetVal<T>(this IShelf self, T value)
 	{
-		return self.Val<T>().Map(map, @default);
-	}
-	
-	public static T Get<T>(this IShelf self, T orElse = default!)
-	{
-		return self.Val<T>().Map<T>(x => x, orElse);
-	}
-	
-	public static T Get<T>(this IShelf self, Func<T> orElse)
-	{
-		return self.Val<T>().Map<T>(x => x, orElse());
-	}
-	
-	public static bool Inspect<T>(this IShelf self, Action<T> inspect)
-	{
-		if (self.Has<T>())
-		{
-			inspect(self.Get<T>());
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		self.Set(value);
+		return new ShelfValue<T>();
 	}
 }
