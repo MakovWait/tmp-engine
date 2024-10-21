@@ -1,11 +1,14 @@
-﻿using Tmp.Core.Redot;
+﻿using Tmp.Core;
+using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Render;
 
 namespace Tmp.Window;
 
-public class AppViewport(SubViewport viewport)
+public class AppViewport(SubViewport viewport, Input input)
 {
+    public Input Input => input;
+
     public void Load() => viewport.Load();
 
     public void Unload() => viewport.Unload();
@@ -35,9 +38,14 @@ public class AppViewport(SubViewport viewport)
         );
     }
 
-    internal void BindTo(Component.Self self)
+    public void BindTo(Component.Self self)
     {
         viewport.BindTo(self);
+        
+        self.On<PreUpdate>(_ =>
+        {
+            input.Propagate(self.Unchecked);
+        });
     }
 }
 

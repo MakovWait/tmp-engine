@@ -2,8 +2,10 @@
 using Raylib_cs;
 using rlImGui_cs;
 using Tmp;
+using Tmp.Core;
 using Tmp.Core.Plugins;
 using Tmp.Core.Plugins.Sources;
+using Tmp.Core.Redot;
 using Tmp.Core.Shelf;
 using Tmp.Math;
 using Tmp.Project;
@@ -26,8 +28,6 @@ internal class DebugEditor() : PluginWrap<App>(new PluginAnonymous<App>("debug-e
 
 internal class WindowImGui(AppViewport viewport) : IWindow, IAppViewportTarget
 {
-    public AppViewport Viewport => viewport;
-
     public void Draw()
     {
         Raylib.BeginDrawing();
@@ -36,6 +36,7 @@ internal class WindowImGui(AppViewport viewport) : IWindow, IAppViewportTarget
 
         if (ImGui.Begin("Game"))
         {
+            viewport.Input.Enable(ImGui.IsWindowFocused());
             var region = ImGui.GetContentRegionAvail();
             viewport.Draw(
                 new Vector2I(region.X.ToInt(), region.Y.ToInt()),
@@ -44,8 +45,18 @@ internal class WindowImGui(AppViewport viewport) : IWindow, IAppViewportTarget
             ImGui.End();
         }
 
+        if (ImGui.Begin("Game2"))
+        {
+            ImGui.End();
+        }
+        
         rlImGui.End();
         Raylib.EndDrawing();
+    }
+
+    public void BindTo(Component.Self self)
+    {
+        viewport.BindTo(self);
     }
 
     void IAppViewportTarget.Draw(Texture2D texture, Rect2 rect, Rect2 sourceRect)
@@ -65,7 +76,7 @@ internal class WindowsImGui : IWindows
 
     public IWindow Main => _window!;
 
-    public void Start(WindowSettings settings)
+    public void Start(WindowSettings settings, Input input)
     {
         var size = settings.Size ?? new Vector2I(800, 450);
         Raylib.SetConfigFlags(ConfigFlags.TopmostWindow | ConfigFlags.ResizableWindow);
@@ -75,7 +86,7 @@ internal class WindowsImGui : IWindows
             settings.Title ?? "Game"
         );
         Raylib.SetTargetFPS(settings.TargetFps ?? 60);
-        _window = new WindowImGui(new AppViewport(new SubViewport(size)));
+        _window = new WindowImGui(new AppViewport(new SubViewport(size), input));
         rlImGui.Setup(false);
     }
 

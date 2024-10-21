@@ -26,6 +26,9 @@ public readonly record struct PostDraw;
 
 public sealed class App : IRunnableApp, IShelf, ITreeBuilder
 {
+    public event Action? PreStart; 
+    public event Action? PostClose; 
+    
     private readonly IPluginSource<App> _pluginsToInstall;
     private readonly InstalledPluginsFor<App> _installedPlugins;
     private readonly Shelf _shelf = new();
@@ -73,6 +76,7 @@ public sealed class App : IRunnableApp, IShelf, ITreeBuilder
     public void Close()
     {
         _tree.Free();
+        PostClose?.Invoke();
     }
 
     private async Task InstallPlugins()

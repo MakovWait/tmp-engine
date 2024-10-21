@@ -80,6 +80,12 @@ public class SubViewport : IViewport
         self.CreateContext<ISubViewportContainer>(_subViewports);
         self.CreateContext<ICamera2D>(_camera);
         self.CreateContext<IViewport>(this);
+        
+        self.UseEffect(() =>
+        {
+            Load();
+            return Unload;
+        }, []);
     }
 
     public class SubViewportTexture(SubViewport subViewport) : ITexture2D

@@ -21,9 +21,7 @@ public class CSubViewport(CSubViewport.Props props) : Component(self =>
     
     self.UseEffect(() =>
     {
-        viewport.Load();
         props.Texture.Set(viewport.Texture);
-        return () => viewport.Unload();
     }, []);
     
     self.UseEffect(() =>

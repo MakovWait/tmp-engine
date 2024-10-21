@@ -1,4 +1,6 @@
 using Raylib_cs;
+using Tmp.Core;
+using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Render;
 
@@ -9,7 +11,7 @@ public class WindowsRl : IWindows
     private WindowRl? _window;
     public IWindow Main => _window!;
 
-    public void Start(WindowSettings settings)
+    public void Start(WindowSettings settings, Input input)
     {
         var size = settings.Size ?? new Vector2I(800, 450);
         Raylib.SetConfigFlags(ConfigFlags.TopmostWindow | ConfigFlags.ResizableWindow);
@@ -20,7 +22,7 @@ public class WindowsRl : IWindows
         );
         Raylib.SetTargetFPS(settings.TargetFps ?? 60);
         _window = new WindowRl(
-            new AppViewport(new SubViewport(size))
+            new AppViewport(new SubViewport(size), input)
         );
     }
 
@@ -43,7 +45,10 @@ public class WindowRl(AppViewport viewport) : IWindow, IAppViewportTarget
         Raylib.EndDrawing();
     }
 
-    public AppViewport Viewport => viewport;
+    public void BindTo(Component.Self self)
+    {
+        viewport.BindTo(self);
+    }
 
     void IAppViewportTarget.Draw(_Texture2D texture, Rect2 rect, Rect2 sourceRect)
     {

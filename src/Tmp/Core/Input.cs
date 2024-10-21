@@ -1,61 +1,67 @@
 using Raylib_cs;
-using Tmp.Core.Plugins;
 using Tmp.Core.Redot;
-using Tmp.Core.Shelf;
 using Tmp.Math;
 
 namespace Tmp.Core;
 
-public class Input
+public class Input(bool enabled)
 {
-    private static readonly HashSet<KeyboardKey> PressedKeys = [];
-    private static readonly HashSet<KeyboardKey> ReleasedKeysThisFrame = [];
+    private readonly HashSet<KeyboardKey> _pressedKeys = [];
+    private readonly HashSet<KeyboardKey> _releasedKeysThisFrame = [];
 
-    public bool IsKeyJustPressed(KeyboardKey key) => Raylib.IsKeyPressed(key);
+    private bool _enabled = enabled;
 
-    public bool IsKeyPressed(KeyboardKey key) => Raylib.IsKeyDown(key);
+    public bool IsKeyJustPressed(KeyboardKey key) => _enabled && Raylib.IsKeyPressed(key);
 
-    public bool IsKeyUp(KeyboardKey key) => Raylib.IsKeyUp(key);
+    public bool IsKeyPressed(KeyboardKey key) => _enabled && Raylib.IsKeyDown(key);
 
-    public bool IsKeyJustReleased(KeyboardKey key) => Raylib.IsKeyReleased(key);
+    public bool IsKeyUp(KeyboardKey key) => _enabled && Raylib.IsKeyUp(key);
 
-    internal void Propagate(Node tree)
+    public bool IsKeyJustReleased(KeyboardKey key) => _enabled && Raylib.IsKeyReleased(key);
+
+    public void Enable(bool enabled)
     {
+        _enabled = enabled;
+    }
+    
+    internal void Propagate(Node subTree)
+    {
+        if (!_enabled) return;
         var keyPressed = Raylib.GetKeyPressed();
         while (keyPressed != 0)
         {
-            PressedKeys.Add((KeyboardKey)keyPressed);
+            _pressedKeys.Add((KeyboardKey)keyPressed);
             keyPressed = Raylib.GetKeyPressed();
         }
 
-        foreach (var key in PressedKeys)
+        foreach (var key in _pressedKeys)
         {
             if (Raylib.IsKeyPressed(key))
             {
-                tree.Call(new InputEventKey(key, true, false));
+                subTree.Call(new InputEventKey(key, true, false));
             }
             else if (Raylib.IsKeyPressedRepeat(key))
             {
-                tree.Call(new InputEventKey(key, true, Raylib.IsKeyPressedRepeat(key)));
+                subTree.Call(new InputEventKey(key, true, Raylib.IsKeyPressedRepeat(key)));
             }
             else if (Raylib.IsKeyReleased(key))
             {
-                tree.Call(new InputEventKey(key, false, false));
-                ReleasedKeysThisFrame.Add(key);
+                subTree.Call(new InputEventKey(key, false, false));
+                _releasedKeysThisFrame.Add(key);
             }
         }
 
         var mouseDelta = Raylib.GetMouseDelta();
         if (mouseDelta.LengthSquared() > 0)
         {
-            tree.Call(new InputEventMouseMotion(new Vector2I((int)mouseDelta.X, (int)mouseDelta.Y)));
+            subTree.Call(new InputEventMouseMotion(new Vector2I((int)mouseDelta.X, (int)mouseDelta.Y)));
         }
 
-        foreach (var key in ReleasedKeysThisFrame)
+        foreach (var key in _releasedKeysThisFrame)
         {
-            PressedKeys.Remove(key);
+            _pressedKeys.Remove(key);
         }
-        ReleasedKeysThisFrame.Clear();
+        _releasedKeysThisFrame.Clear();
     }
 }
 
@@ -71,19 +77,4 @@ public readonly record struct InputEventKey(KeyboardKey KeyCode, bool Pressed, b
 
     public bool IsJustReleased() => Raylib.IsKeyReleased(KeyCode);
 }
-
-public class PluginInput() : PluginWrap<App>(new PluginAnonymous<App>("input")
-{
-    OnBuild = app =>
-    {
-        var input = new Input();
-        app.SetSingleton(input);
-        app.DecorateRootUp(new Component(self =>
-        {
-            self.On<PreUpdate>(_ =>
-            {
-                input.Propagate(self.Unchecked);
-            });
-        }));
-    }
-});
+;

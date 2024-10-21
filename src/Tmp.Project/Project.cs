@@ -23,7 +23,6 @@ public static class Project
                 Size = new Vector2I(800, 450),
                 TargetFps = 60
             }),
-            new PluginInput(),
             new PluginTree(InitTree),
         ]);
     }

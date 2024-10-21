@@ -1,9 +1,10 @@
+using Tmp.Core.Redot;
+
 namespace Tmp.Window;
 
 public interface IWindow
 {
-    // TODO 🥶
-    AppViewport Viewport { get; }
-
     void Draw();
+
+    void BindTo(Component.Self self);
 }
