@@ -18,7 +18,8 @@ public class Node
     private readonly Callbacks _callbacksOn = new();
     private readonly Callbacks _callbacksAfter = new();
     private readonly ContextValues _contextValues = new();
-    private readonly LifecycleEffects _lifecycleEffects = new();
+    private readonly LifecycleEffects _lifecycleEffectsOn = new();
+    private readonly LifecycleEffects _lifecycleEffectsAfter = new();
     private readonly Children _children = new();
     private readonly ExportedVars _exportedVars = new();
     
@@ -90,7 +91,12 @@ public class Node
 
     public void UseEffect(Effect effect)
     {
-        _lifecycleEffects.Add(effect);
+        _lifecycleEffectsOn.Add(effect);
+    }
+    
+    public void UseAfterEffect(Effect effect)
+    {
+        _lifecycleEffectsAfter.Add(effect);
     }
 
     public void SetId(string someId)
@@ -105,8 +111,18 @@ public class Node
     
     public void UseEffect(Func<Action> effect, IEffectDependency deps)
     {
+        UseEffectWithDeps(effect, deps, _lifecycleEffectsOn);
+    }
+    
+    public void UseAfterEffect(Func<Action> effect, IEffectDependency deps)
+    {
+        UseEffectWithDeps(effect, deps, _lifecycleEffectsAfter);
+    }
+
+    private void UseEffectWithDeps(Func<Action> effect, IEffectDependency deps, LifecycleEffects effects)
+    {
         Action? cleanup = null;
-        UseEffect(new Effect(() =>
+        effects.Add(new Effect(() =>
         {
             deps.AboutToChange += Cleanup;
             deps.Changed += Trigger;
@@ -285,9 +301,10 @@ public class Node
         if (_tree.IsBuilding()) return;
         _id.SetTo(_tree.IdNodeDict);
         _contextValues.Init();
-        _lifecycleEffects.Invoke();
+        _lifecycleEffectsOn.Invoke();
         _firstTimeEntersTree = false;
         _children.OnEnterTree();
+        _lifecycleEffectsAfter.Invoke();
     }
 
     private void PropagateOnExitTree()
@@ -295,11 +312,12 @@ public class Node
         if (_tree.IsBuilding()) return;
         OnExitTreeThisOnly();
         _children.OnExitTree();
+        _lifecycleEffectsAfter.Cleanup();
     }
     
     private void OnExitTreeThisOnly()
     {
-        _lifecycleEffects.Cleanup();
+        _lifecycleEffectsOn.Cleanup();
         _contextValues.Uninitialize();
         _id.RemoveFrom(_tree.IdNodeDict);
     }
@@ -319,6 +337,7 @@ public class Node
         OnExitTreeThisOnly();
         _parent?.RemoveChildInternal(this);
         _children.Free();
+        _lifecycleEffectsAfter.Cleanup();
     }
     
     public void QueueFree()

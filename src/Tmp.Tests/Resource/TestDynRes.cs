@@ -29,7 +29,7 @@ public class TestDynRes
         var resources = new Resources();
         resources.AddDyn("test", "test");
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidCastException>(() =>
         {
             resources.Load<int>("dyn://test");
         });

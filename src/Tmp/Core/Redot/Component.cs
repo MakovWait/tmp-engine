@@ -78,7 +78,19 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             AssertNodeIsReady();
             return @unchecked.GetNodeById(id);
         }
+
+        public void Call<TState>(TState state)
+        {
+            AssertNodeIsReady();
+            @unchecked.Call(state);
+        }
         
+        public void Call<TState>() where TState : new()
+        {
+            AssertNodeIsReady();
+            @unchecked.Call<TState>();
+        }
+
         public void UseEffect(Func<Action> effect)
         {
             AssertNodeIsBuilding();
@@ -94,19 +106,7 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
                 return () => { };
             }));
         }
-
-        public void Call<TState>(TState state)
-        {
-            AssertNodeIsReady();
-            @unchecked.Call(state);
-        }
         
-        public void Call<TState>() where TState : new()
-        {
-            AssertNodeIsReady();
-            @unchecked.Call<TState>();
-        }
-
         public void UseEffect(Action effect, IEffectDependency deps)
         {
             UseEffect(() =>
@@ -141,6 +141,56 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             @unchecked.UseEffect(effect, deps);
         }
 
+        public void UseAfterEffect(Func<Action> effect)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.UseAfterEffect(new Node.Effect(effect));
+        }
+    
+        public void UseAfterEffect(Action effect)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.UseAfterEffect(new Node.Effect(() =>
+            {
+                effect();
+                return () => { };
+            }));
+        }
+        
+        public void UseAfterEffect(Action effect, IEffectDependency deps)
+        {
+            UseAfterEffect(() =>
+            {
+                effect();
+                return () => { };
+            }, deps);
+        }
+        
+        public void UseAfterEffect(Action effect, IEnumerable<IEffectDependency> deps)
+        {
+            UseAfterEffect(() =>
+            {
+                effect();
+                return () => { };
+            }, new EffectDependencies(deps));
+        }
+        
+        public void UseAfterEffect(Func<Action> effect, IEnumerable<IEffectDependency> deps)
+        {
+            UseAfterEffect(effect, new EffectDependencies(deps));
+        }
+
+        public void UseAfterCleanup(Action cleanup)
+        {
+            UseAfterEffect(() => cleanup, []);
+        }
+        
+        public void UseAfterEffect(Func<Action> effect, IEffectDependency deps)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.UseAfterEffect(effect, deps);
+        }
+        
         public void QueueFree()
         {
             @unchecked.QueueFree();

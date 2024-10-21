@@ -27,6 +27,7 @@ public class Tree
 
     public void Build()
     {
+        Debug.Assert(_isReady == false);
         while (_builders.Count > 0)
         {
             _builders.Dequeue()(this);

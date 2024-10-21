@@ -385,6 +385,63 @@ public class LifecycleEffectTests
         tree.Update();
         Assert.Fail();
     }
+    
+    [Test]
+    public void TestAfterEffect()
+    {
+        var tree = new Tree(isReady: false);
+        var calls = new List<int>();
+        
+        tree.QueueBuild(self =>
+        {
+            self.AttachToRoot(new Component(self =>
+            {
+                self.UseEffect(() =>
+                {
+                    calls.Add(1);
+                    return () =>
+                    {
+                        calls.Add(5);
+                    };
+                });
+                
+                self.UseAfterEffect(() =>
+                {
+                    calls.Add(4);
+                    return () =>
+                    {
+                        calls.Add(8);
+                    };
+                });
+                
+                return new Component(self =>
+                {
+                    self.UseEffect(() =>
+                    {
+                        calls.Add(2);
+                        return () =>
+                        {
+                            calls.Add(6);
+                        };
+                    });
+                
+                    self.UseAfterEffect(() =>
+                    {
+                        calls.Add(3);
+                        return () =>
+                        {
+                            calls.Add(7);
+                        };
+                    });
+                });
+            }));
+        });
+        
+        tree.Build();
+        tree.Free();
+        
+        Assert.That(calls, Is.EqualTo(new List<int> { 1, 2, 3, 4, 5, 6, 7, 8 }));
+    }
 }
 
 public class ComponentTests
