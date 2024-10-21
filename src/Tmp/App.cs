@@ -53,6 +53,7 @@ public sealed class App : IRunnableApp, IShelf, ITreeBuilder
 
     public void Start()
     {
+        PreStart?.Invoke();
         _tree.Build();
     }
 
