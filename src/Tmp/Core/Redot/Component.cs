@@ -7,6 +7,11 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
     : IComponent, IEnumerable<IFakeEnumerable>, IFakeEnumerable
 {
     private readonly List<IComponent> outerChildren = [];
+    
+    public List<IComponent> Children
+    {
+        set => outerChildren.AddRange(value);
+    }
 
     public Component() : this(self => self.Children.ToArray())
     {
@@ -49,9 +54,9 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
         return GetEnumerator();
     }
     
-    public class Self(Node @unchecked, IEnumerable<IComponent> outerChildren)
+    public class Self(Node @unchecked, List<IComponent> outerChildren)
     {
-        public IEnumerable<IComponent> Children
+        public List<IComponent> Children
         {
             get
             {
