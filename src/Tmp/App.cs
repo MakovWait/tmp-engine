@@ -113,7 +113,7 @@ public sealed class App : IRunnableApp, IShelf, ITreeBuilder
 
     public void SetSingleton<T>(T singleton)
     {
-        _tree.QueueBuild(tree => tree.SetSingleton(singleton));
+        _tree.SetSingleton(singleton);
     }
 
     public void DecorateRootUp(IComponent component)
