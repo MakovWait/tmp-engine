@@ -1,4 +1,4 @@
-namespace Tmp.Resource.Util;
+namespace Tmp.Asset.Util;
 
 public interface IResultMapper<Y>
 {
@@ -14,9 +14,9 @@ public static class ResultMapper<T>
     {
         public T Map<Y>(Y result)
         {
-            if (result is T resource)
+            if (result is T target)
             {
-                return resource;
+                return target;
             }
             throw new ArgumentException($"Result must be of type {typeof(T)}");
         }

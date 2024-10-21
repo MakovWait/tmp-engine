@@ -2,10 +2,10 @@ using Raylib_cs;
 using Tmp.IO;
 using Tmp.Math;
 using Tmp.Render;
-using Tmp.Resource.Format;
-using Tmp.Resource.Util;
+using Tmp.Asset.Format;
+using Tmp.Asset.Util;
 
-namespace Tmp.Resource.BuiltIn.Texture;
+namespace Tmp.Asset.BuiltIn.Texture;
 
 public sealed class Texture2D(FilePath texturePath) : IDisposable, ITexture2D
 {
@@ -44,7 +44,7 @@ public sealed class Texture2D(FilePath texturePath) : IDisposable, ITexture2D
         );
     }
 
-    public class Deserializer : IResourceDeserializer<Texture2D>
+    public class Deserializer : IAssetDeserializer<Texture2D>
     {
         public Texture2D From(ISerializeInput input)
         {

@@ -6,8 +6,8 @@ using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Math.Components;
 using Tmp.Render.Components;
-using Tmp.Resource.BuiltIn.Texture;
-using Tmp.Resource.Components;
+using Tmp.Asset.BuiltIn.Texture;
+using Tmp.Asset.Components;
 using Tmp.Window;
 
 namespace Tmp.Project;
@@ -120,7 +120,7 @@ public static class Project
                             var transform = self.UseTransform2D();
                             var canvasItem = self.UseCanvasItem(transform);
 
-                            var texture = self.UseRes<ITexture2D>("res://test.gres");
+                            var texture = self.UseAss<ITexture2D>("ass://test.gres");
 
                             self.UseEffect(() =>
                             {

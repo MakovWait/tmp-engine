@@ -3,7 +3,7 @@ using Raylib_cs;
 using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Render.Util;
-using Tmp.Resource.BuiltIn.Texture;
+using Tmp.Asset.BuiltIn.Texture;
 
 namespace Tmp.Render;
 

@@ -1,4 +1,4 @@
-namespace Tmp.Resource.Format;
+namespace Tmp.Asset.Format;
 
 public interface ISerializeOutput
 {

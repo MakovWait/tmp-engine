@@ -2,7 +2,7 @@ using Raylib_cs;
 using Tmp.Math;
 using Tmp.Render;
 
-namespace Tmp.Resource.BuiltIn.Texture;
+namespace Tmp.Asset.BuiltIn.Texture;
 
 public interface ITexture2D
 {

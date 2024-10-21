@@ -1,17 +1,17 @@
 using System.Diagnostics;
 
-namespace Tmp.Resource;
+namespace Tmp.Asset;
 
-internal sealed class Res<T>(
+internal sealed class Ass<T>(
     T value,
-    ResourcePath path,
+    AssetPath path,
     IReload<T> reload
-) : IRes<T>
+) : IAss<T>
 {
     private T _value = value;
     private bool _disposed;
     
-    public ResourcePath Path { get; } = path;
+    public AssetPath Path { get; } = path;
     
     public void Reload()
     {
@@ -39,14 +39,14 @@ internal sealed class Res<T>(
     }
 }
 
-public interface IRes : IDisposable
+public interface IAss : IDisposable
 {
-    ResourcePath Path { get; }
+    AssetPath Path { get; }
     
     void Reload();
 }
 
-public interface IRes<out T> : IRes
+public interface IAss<out T> : IAss
 {
     T Get();
 }
@@ -64,14 +64,14 @@ public class ReloadConst<T>(T value) : IReload<T>
     }
 }
 
-public class ReloadDefault<TResource>(
-    IResourcesSource subResources,
-    IResourceLoader loader,
-    ResourcePath path
-) : IReload<TResource>
+public class ReloadDefault<TAsset>(
+    IAssetsSource subAssets,
+    IAssetLoader loader,
+    AssetPath path
+) : IReload<TAsset>
 {
-    public TResource Invoke()
+    public TAsset Invoke()
     {
-        return loader.Load<TResource>(path, subResources);
+        return loader.Load<TAsset>(path, subAssets);
     }
 }

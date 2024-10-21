@@ -1,24 +1,24 @@
+using Tmp.Asset.Util;
 using Tmp.Math;
-using Tmp.Resource.Util;
 using Tommy;
 
-namespace Tmp.Resource.Format.Text;
+namespace Tmp.Asset.Format.Text;
 
-public class ResourceLoaderText : IResourceLoader
+public class AssetLoaderText : IAssetLoader
 {
-    private readonly List<IResourceDeserializer> _deserializers = [];
+    private readonly List<IAssetDeserializer> _deserializers = [];
 
-    public void AddDeserializer(IResourceDeserializer deserializer)
+    public void AddDeserializer(IAssetDeserializer deserializer)
     {
         _deserializers.Add(deserializer);
     }
     
-    public bool MatchPath(ResourcePath path)
+    public bool MatchPath(AssetPath path)
     {
         return path.Extension == "gres";
     }
 
-    public T Load<T>(ResourcePath path, IResourcesSource subResources, IResultMapper<T> resultMapper)
+    public T Load<T>(AssetPath path, IAssetsSource subAssets, IResultMapper<T> resultMapper)
     {
         using var reader = File.OpenText(path.FilePath);
         var table = TOML.Parse(reader);
@@ -28,7 +28,7 @@ public class ResourceLoaderText : IResourceLoader
         {
             if (deserializer.MatchType(type))
             {
-                var input = new SerializeInputToml(subResources, node);
+                var input = new SerializeInputToml(subAssets, node);
                 return deserializer.Deserialize(input, resultMapper);
             }
         }
@@ -36,7 +36,7 @@ public class ResourceLoaderText : IResourceLoader
     }
 }
 
-public class SerializeInputToml(IResourcesSource resources, TomlNode root) : ISerializeInput
+public class SerializeInputToml(IAssetsSource assets, TomlNode root) : ISerializeInput
 {
     public Rect2 ReadRect2(string name)
     {
@@ -55,9 +55,9 @@ public class SerializeInputToml(IResourcesSource resources, TomlNode root) : ISe
         return loc.AsString.Value;
     }
 
-    public IRes<T> ReadSubRes<T>(string name)
+    public IAss<T> ReadSubRes<T>(string name)
     {
         var loc = root[name];
-        return resources.Load<T>(loc["path"].AsString.Value);
+        return assets.Load<T>(loc["path"].AsString.Value);
     }
 }

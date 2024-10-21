@@ -1,6 +1,6 @@
 using Tmp.Math;
 
-namespace Tmp.Resource.Format;
+namespace Tmp.Asset.Format;
 
 public interface IDeserialize<out T>
 {
@@ -13,5 +13,5 @@ public interface ISerializeInput
     
     string ReadString(string name);
 
-    IRes<T> ReadSubRes<T>(string name);
+    IAss<T> ReadSubRes<T>(string name);
 }

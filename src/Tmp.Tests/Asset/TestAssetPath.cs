@@ -1,16 +1,16 @@
-﻿using Tmp.Resource;
+﻿using Tmp.Asset;
 
-namespace Tmp.Tests.Resource;
+namespace Tmp.Tests.Asset;
 
-public class TestResourcePath
+public class TestAssetPath
 {
     [Test]
     public void Test1()
     {
-        var path = ResourcePath.FromPath("dyn://test");
+        var path = AssetPath.FromPath("mem://test");
         Assert.Multiple(() =>
         {
-            Assert.That(path.IsDyn);
+            Assert.That(path.IsMem);
             Assert.That(!path.FilePath.Exists);
         });
     }
@@ -18,10 +18,10 @@ public class TestResourcePath
     [Test]
     public void TestResResourcePath()
     {
-        var path = ResourcePath.FromPath("res://test.gres");
+        var path = AssetPath.FromPath("ass://test.gres");
         Assert.Multiple(() =>
         {
-            Assert.That(!path.IsDyn);
+            Assert.That(!path.IsMem);
             Assert.That(path.FilePath.Exists);
         });
     }
@@ -29,7 +29,7 @@ public class TestResourcePath
     [Test]
     public void TestUserResourcePath()
     {
-        var path = ResourcePath.FromPath("user://test.gres");
-        Assert.That(!path.IsDyn);
+        var path = AssetPath.FromPath("user://test.gres");
+        Assert.That(!path.IsMem);
     }
 }

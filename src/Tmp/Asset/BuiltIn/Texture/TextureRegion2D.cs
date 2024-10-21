@@ -1,12 +1,12 @@
 using Raylib_cs;
 using Tmp.Math;
 using Tmp.Render;
-using Tmp.Resource.Format;
-using Tmp.Resource.Util;
+using Tmp.Asset.Format;
+using Tmp.Asset.Util;
 
-namespace Tmp.Resource.BuiltIn.Texture;
+namespace Tmp.Asset.BuiltIn.Texture;
 
-public class TextureRegion2D(IRes<ITexture2D> origin, Rect2 srcRect) : ITexture2D, ISerializable
+public class TextureRegion2D(IAss<ITexture2D> origin, Rect2 srcRect) : ITexture2D, ISerializable
 {
     public void Draw(IDrawContext ctx, Vector2 position, Color modulate)
     {
@@ -29,7 +29,7 @@ public class TextureRegion2D(IRes<ITexture2D> origin, Rect2 srcRect) : ITexture2
         output.Write(nameof(srcRect), srcRect);
     }
 
-    public class Deserializer : IResourceDeserializer<TextureRegion2D>
+    public class Deserializer : IAssetDeserializer<TextureRegion2D>
     {
         public TextureRegion2D From(ISerializeInput input)
         {

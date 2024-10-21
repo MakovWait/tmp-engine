@@ -1,7 +1,7 @@
 using Tmp.Core.Plugins;
 using Tmp.HotReload.Components;
-using Tmp.Resource;
-using Tmp.Resource.Components;
+using Tmp.Asset;
+using Tmp.Asset.Components;
 
 namespace Tmp.Core.Redot;
 
@@ -9,7 +9,7 @@ public class PluginTree(Action<App> initTree) : PluginWrap<App>(new PluginAnonym
 {
     OnBuild = app =>
     {
-        app.DecorateRootUp(new CResources(new Resources()));
+        app.DecorateRootUp(new CAssets(new Assets()));
         app.DecorateRootUp(new CHotReloadSource());
         initTree(app);
     },

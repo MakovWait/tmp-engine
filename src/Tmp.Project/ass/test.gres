@@ -1,13 +1,13 @@
 [self]
 __type__="TextureRegion2D"
-origin={ path = "res://test.gres#1" }
+origin={ path = "ass://test.gres#1" }
 srcRect={ x = 0.0, y = 0.0, w = 16.0, h = 16.0 }
 
 [subres.1]
 __type__="TextureRegion2D"
-origin={ path = "res://test.gres#2" }
+origin={ path = "ass://test.gres#2" }
 srcRect={ x = 0.0, y = 0.0, w = 32.0, h = 32.0 }
 
 [subres.2]
 __type__="Texture2D"
-texturePath="res://sheets.png"
+texturePath="ass://sheets.png"
