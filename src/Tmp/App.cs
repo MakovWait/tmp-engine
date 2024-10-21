@@ -75,7 +75,7 @@ public sealed class App : IRunnableApp, IShelf, ITreeBuilder
         _tree.Free();
     }
 
-    async private Task InstallPlugins()
+    private async Task InstallPlugins()
     {
         await _pluginsToInstall.AddTo(_installedPlugins);
         await _installedPlugins.Finish();
