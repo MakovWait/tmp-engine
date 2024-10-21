@@ -1,36 +1,36 @@
-using Tmp.Core.Shelf;
+using Tmp.Core.Resource;
 
-namespace Tmp.Tests.Shelf;
+namespace Tmp.Tests.Resources;
 
 public class Tests
 {
-    private IShelf _shelf;
+    private IResources _resources;
     
     [SetUp]
     public void Setup()
     {
-        _shelf = new Core.Shelf.Shelf();    
+        _resources = new Core.Resource.Resources();    
     }
 
     [Test]
     public void TestInsert()
     {
-        _shelf.Set(1);
+        _resources.Set(1);
         Assert.Multiple(() =>
         {
-            Assert.That(_shelf.Has<int>(), Is.True);
-            Assert.That(_shelf.Get<int>(), Is.EqualTo(1));
+            Assert.That(_resources.Has<int>(), Is.True);
+            Assert.That(_resources.Get<int>(), Is.EqualTo(1));
         });
     }
     
     [Test]
     public void TestRemove()
     {
-        _shelf.Set(1);
-        _shelf.Del<int>();
+        _resources.Set(1);
+        _resources.Del<int>();
         Assert.Multiple(() =>
         {
-            Assert.That(_shelf.Has<int>(), Is.False);
+            Assert.That(_resources.Has<int>(), Is.False);
         });
     }
     
@@ -38,13 +38,13 @@ public class Tests
     public void TestOnRemove()
     {
         var wasRemoved = false;
-        _shelf.OnDel((int what) =>
+        _resources.OnDel((int what) =>
         {
             Assert.That(what, Is.EqualTo(1));
             wasRemoved = true;
         });
-        _shelf.Set(1);
-        _shelf.Del<int>();
+        _resources.Set(1);
+        _resources.Del<int>();
         Assert.That(wasRemoved, Is.True);
     }
     
@@ -52,12 +52,12 @@ public class Tests
     public void TestOnInsert()
     {
         var wasInserted = false;
-        _shelf.OnSet((int what) =>
+        _resources.OnSet((int what) =>
         {
             Assert.That(what, Is.EqualTo(1));
             wasInserted = true;
         });
-        _shelf.Set(1);
+        _resources.Set(1);
         Assert.That(wasInserted, Is.True);
     }
     
@@ -65,11 +65,11 @@ public class Tests
     public void TestOnInsertDispose()
     {
         var wasInserted = false;
-        _shelf.OnSet((int _) =>
+        _resources.OnSet((int _) =>
         {
             wasInserted = true;
         }).Dispose();
-        _shelf.Set(1);
+        _resources.Set(1);
         Assert.That(wasInserted, Is.False);
     }
     
@@ -77,29 +77,29 @@ public class Tests
     public void TestOnRemoveDispose()
     {
         var wasRemoved = false;
-        _shelf.OnDel((int _) =>
+        _resources.OnDel((int _) =>
         {
             wasRemoved = true;
         }).Dispose();
-        _shelf.Set(1);
-        _shelf.Del<int>();
+        _resources.Set(1);
+        _resources.Del<int>();
         Assert.That(wasRemoved, Is.False);
     }
     
     [Test]
     public void TestEffectCleanupIsCalledOnReSet()
     {
-        var val = _shelf.Val<int>();
-        val.Set(1);
+        var res = _resources.Res<int>();
+        res.Set(1);
         
         var calls = 0;
-        val.Effect(_ =>
+        res.Effect(_ =>
         {
             return () => calls += 1;
         });
         
-        val.Set(2);
-        val.Set(3);
+        res.Set(2);
+        res.Set(3);
         
         Assert.That(calls, Is.EqualTo(2));
     }
@@ -107,16 +107,16 @@ public class Tests
     [Test]
     public void TestEffectCleanupIsCalledOnDel()
     {
-        var val = _shelf.Val<int>();
-        val.Set(1);
+        var res = _resources.Res<int>();
+        res.Set(1);
         
         var calls = 0;
-        val.Effect(_ =>
+        res.Effect(_ =>
         {
             return () => calls += 1;
         });
         
-        val.Del();
+        res.Del();
         
         Assert.That(calls, Is.EqualTo(1));
     }
@@ -124,17 +124,17 @@ public class Tests
     [Test]
     public void TestEffectDelCleanupIsOneShot()
     {
-        var val = _shelf.Val<int>();
-        val.Set(1);
+        var res = _resources.Res<int>();
+        res.Set(1);
         
         var calls = 0;
-        val.Effect(_ =>
+        res.Effect(_ =>
         {
             return () => calls += 1;
         });
         
-        val.Del();
-        val.Set(1);
+        res.Del();
+        res.Set(1);
         
         Assert.That(calls, Is.EqualTo(1));
     }

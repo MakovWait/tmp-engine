@@ -1,17 +1,17 @@
 using System.Diagnostics;
 
-namespace Tmp.Core.Shelf;
+namespace Tmp.Core.Resource;
 
 public delegate Action Effect<in T>(T what);
 
-public readonly struct ShelfValue<T>(IShelf shelf)
+public readonly struct Res<T>(IResources resources)
 {
-    public bool IsInserted() => shelf.Has<T>();
+    public bool IsInserted() => resources.Has<T>();
 
     public T Get()
     {
-        Debug.Assert(shelf.Has<T>());
-        return shelf.Get<T>();
+        Debug.Assert(resources.Has<T>());
+        return resources.Get<T>();
     }
     
     public T GetOr(T orElse = default!)
@@ -26,12 +26,12 @@ public readonly struct ShelfValue<T>(IShelf shelf)
 
     public void Set(T value)
     {
-        shelf.Set(value);
+        resources.Set(value);
     }
 
     public void Del()
     {
-        shelf.Del<T>();
+        resources.Del<T>();
     }
 
     public bool Is(T value)
@@ -42,12 +42,12 @@ public readonly struct ShelfValue<T>(IShelf shelf)
 
     public IDisposable OnDelete(Action<T> callback)
     {
-        return shelf.OnDel(callback);
+        return resources.OnDel(callback);
     }
 
     public IDisposable OnSet(Action<T> callback)
     {
-        return shelf.OnSet(callback);
+        return resources.OnSet(callback);
     }
 
     public IDisposable Effect(Effect<T> effect)
@@ -55,13 +55,13 @@ public readonly struct ShelfValue<T>(IShelf shelf)
         List<IDisposable> disposables = [];
         Action? cleanup = null;
 
-        disposables.Add(shelf.OnSet<T>(what =>
+        disposables.Add(resources.OnSet<T>(what =>
         {
             cleanup?.Invoke();
             cleanup = effect(what);
         }));
 
-        disposables.Add(shelf.OnDel<T>(_ =>
+        disposables.Add(resources.OnDel<T>(_ =>
         {
             cleanup?.Invoke();
             cleanup = null;
@@ -118,5 +118,5 @@ public readonly struct ShelfValue<T>(IShelf shelf)
         }
     }
 
-    public static implicit operator T(ShelfValue<T> self) => self.Get();
+    public static implicit operator T(Res<T> self) => self.Get();
 }

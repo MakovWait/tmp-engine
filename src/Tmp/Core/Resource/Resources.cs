@@ -1,46 +1,46 @@
 using System.Diagnostics;
 
-namespace Tmp.Core.Shelf;
+namespace Tmp.Core.Resource;
 
-public sealed class Shelf : IShelf
+public sealed class Resources : IResources
 {
-	private readonly Dictionary<Type, object> registry = new();
-	private readonly Signals setSignals = new();
-	private readonly Signals delSignals = new();
+	private readonly Dictionary<Type, object> _registry = new();
+	private readonly Signals _setSignals = new();
+	private readonly Signals _delSignals = new();
 
 	public void Set<T>(T value)
 	{
-		registry[typeof(T)] = value ?? throw new ArgumentNullException(nameof(value));
-		setSignals.Notify(value);
+		_registry[typeof(T)] = value ?? throw new ArgumentNullException(nameof(value));
+		_setSignals.Notify(value);
 	}
 
 	public T Get<T>()
 	{
 		Debug.Assert(Has<T>());
-		return (T)registry[typeof(T)];
+		return (T)_registry[typeof(T)];
 	}
 
 	public bool Has<T>()
 	{
-		return registry.ContainsKey(typeof(T));
+		return _registry.ContainsKey(typeof(T));
 	}
 
 	public void Del<T>()
 	{
 		Debug.Assert(Has<T>());
 		var value = Get<T>();
-		registry.Remove(typeof(T));
-		delSignals.Notify(value);
+		_registry.Remove(typeof(T));
+		_delSignals.Notify(value);
 	}
 
 	public IDisposable OnDel<T>(Action<T> callback)
 	{
-		return delSignals.Add(callback);
+		return _delSignals.Add(callback);
 	}
 
 	public IDisposable OnSet<T>(Action<T> callback)
 	{
-		return setSignals.Add(callback);
+		return _setSignals.Add(callback);
 	}
 }
 

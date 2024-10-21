@@ -6,7 +6,7 @@ using Tmp.Core;
 using Tmp.Core.Plugins;
 using Tmp.Core.Plugins.Sources;
 using Tmp.Core.Redot;
-using Tmp.Core.Shelf;
+using Tmp.Core.Resource;
 using Tmp.Math;
 using Tmp.Project;
 using Tmp.Render;
@@ -22,7 +22,7 @@ internal class DebugEditor() : PluginWrap<App>(new PluginAnonymous<App>("debug-e
 {
     OnBuild = app =>
     {
-        app.SetVal<IWindows>(new WindowsImGui());
+        app.SetRes<IWindows>(new WindowsImGui());
     }
 });
 

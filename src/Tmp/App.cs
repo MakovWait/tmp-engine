@@ -1,7 +1,7 @@
 using Raylib_cs;
 using Tmp.Core.Plugins;
 using Tmp.Core.Redot;
-using Tmp.Core.Shelf;
+using Tmp.Core.Resource;
 
 namespace Tmp;
 
@@ -24,14 +24,14 @@ public readonly record struct PreDraw;
 public readonly record struct Draw;
 public readonly record struct PostDraw;
 
-public sealed class App : IRunnableApp, IShelf, ITreeBuilder
+public sealed class App : IRunnableApp, IResources, ITreeBuilder
 {
     public event Action? PreStart; 
     public event Action? PostClose; 
     
     private readonly IPluginSource<App> _pluginsToInstall;
     private readonly InstalledPluginsFor<App> _installedPlugins;
-    private readonly Shelf _shelf = new();
+    private readonly Resources _resources = new();
     private readonly Tree _tree = new(isReady: false);
     private IAppRunner _runner = new IAppRunner.Default();
     
@@ -85,34 +85,34 @@ public sealed class App : IRunnableApp, IShelf, ITreeBuilder
         await _installedPlugins.Finish();
     }
 
-    void IShelf.Set<T>(T value)
+    void IResources.Set<T>(T value)
     {
-        _shelf.Set(value);
+        _resources.Set(value);
     }
 
-    T IShelf.Get<T>()
+    T IResources.Get<T>()
     {
-        return _shelf.Get<T>();
+        return _resources.Get<T>();
     }
 
-    bool IShelf.Has<T>()
+    bool IResources.Has<T>()
     {
-        return _shelf.Has<T>();
+        return _resources.Has<T>();
     }
 
-    void IShelf.Del<T>()
+    void IResources.Del<T>()
     {
-        _shelf.Del<T>();
+        _resources.Del<T>();
     }
 
-    IDisposable IShelf.OnDel<T>(Action<T> callback)
+    IDisposable IResources.OnDel<T>(Action<T> callback)
     {
-        return _shelf.OnDel(callback);
+        return _resources.OnDel(callback);
     }
 
-    IDisposable IShelf.OnSet<T>(Action<T> callback)
+    IDisposable IResources.OnSet<T>(Action<T> callback)
     {
-        return _shelf.OnSet(callback);
+        return _resources.OnSet(callback);
     }
 
     public void SetSingleton<T>(T singleton)

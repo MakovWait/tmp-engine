@@ -1,7 +1,7 @@
 using Tmp.Core;
 using Tmp.Core.Plugins;
 using Tmp.Core.Redot;
-using Tmp.Core.Shelf;
+using Tmp.Core.Resource;
 using Tmp.Math;
 using Tmp.Window.Rl;
 
@@ -20,7 +20,7 @@ public class PluginWindow(
 {
     OnFinish = app =>
     {
-        var windows = app.Val<IWindows>().GetOr(() => new WindowsRl());
+        var windows = app.Res<IWindows>().GetOr(() => new WindowsRl());
 
         app.PreStart += () =>
         {
