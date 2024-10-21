@@ -65,6 +65,8 @@ public sealed class App : IRunnableApp, IShelf, ITreeBuilder
         _tree.Call<PreDraw>();
         _tree.Call<Draw>();
         _tree.Call<PostDraw>();
+        
+        _tree.Update();
     }
 
     public void Close()
