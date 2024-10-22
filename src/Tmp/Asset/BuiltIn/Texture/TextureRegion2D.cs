@@ -6,7 +6,7 @@ using Tmp.Asset.Util;
 
 namespace Tmp.Asset.BuiltIn.Texture;
 
-public class TextureRegion2D(IAss<ITexture2D> origin, Rect2 srcRect) : ITexture2D, ISerializable
+public class TextureRegion2D(IAsset<ITexture2D> origin, Rect2 srcRect) : ITexture2D, ISerializable
 {
     public void Draw(IDrawContext ctx, Vector2 position, Color modulate)
     {

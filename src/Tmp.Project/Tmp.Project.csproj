@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="ass\**\*">
+        <None Update="assets\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

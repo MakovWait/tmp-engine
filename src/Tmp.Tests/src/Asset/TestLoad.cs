@@ -16,8 +16,8 @@ public class TestLoad
         textLoader.AddDeserializer(new TestAsset.Deserializer());
         assets.AddLoader(textLoader);
         
-        var untyped = assets.Load("ass://untyped-asset/asset.gres");
-        Assert.That(untyped is Ass<TestAsset>);
+        var untyped = assets.Load("assets://untyped-asset/asset.jass");
+        Assert.That(untyped is _Asset<TestAsset>);
     }
     
     [Test]
@@ -29,7 +29,7 @@ public class TestLoad
         textLoader.AddDeserializer(new TestAsset.Deserializer());
         assets.AddLoader(textLoader);
         
-        var typed = assets.Load<TestAsset>("ass://untyped-asset/asset.gres");
+        var typed = assets.Load<TestAsset>("assets://untyped-asset/asset.jass");
         Assert.That(typed.Get(), Is.Not.EqualTo(null));
     }
     
@@ -42,8 +42,8 @@ public class TestLoad
         textLoader.AddDeserializer(new TestAsset.Deserializer());
         assets.AddLoader(textLoader);
 
-        var b = assets.Load<ITestAsset>("ass://untyped-asset/asset.gres");
-        var a = assets.Load<TestAsset>("ass://untyped-asset/asset.gres");
+        var b = assets.Load<ITestAsset>("assets://untyped-asset/asset.jass");
+        var a = assets.Load<TestAsset>("assets://untyped-asset/asset.jass");
         
         Assert.That(b == a);
     }
@@ -57,8 +57,8 @@ public class TestLoad
         textLoader.AddDeserializer(new TestAsset.Deserializer());
         assets.AddLoader(textLoader);
 
-        var a = assets.Load<TestAsset>("ass://untyped-asset/asset.gres");
-        var b = assets.Load<ITestAsset>("ass://untyped-asset/asset.gres");
+        var a = assets.Load<TestAsset>("assets://untyped-asset/asset.jass");
+        var b = assets.Load<ITestAsset>("assets://untyped-asset/asset.jass");
         
         Assert.That(b == a);
     }

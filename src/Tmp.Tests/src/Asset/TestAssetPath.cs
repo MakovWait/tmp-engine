@@ -18,7 +18,7 @@ public class TestAssetPath
     [Test]
     public void TestResResourcePath()
     {
-        var path = AssetPath.FromPath("ass://test.gres");
+        var path = AssetPath.FromPath("assets://test.jass");
         Assert.Multiple(() =>
         {
             Assert.That(!path.IsMem);
@@ -29,7 +29,7 @@ public class TestAssetPath
     [Test]
     public void TestUserResourcePath()
     {
-        var path = AssetPath.FromPath("user://test.gres");
+        var path = AssetPath.FromPath("user://test.jass");
         Assert.That(!path.IsMem);
     }
 }

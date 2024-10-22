@@ -31,9 +31,9 @@ public readonly record struct FilePath(string UncheckedValue)
 
     public static FilePath FromStringPath(string path)
     {
-        if (path.StartsWith("ass://"))
+        if (path.StartsWith("assets://"))
         {
-            path = Path.Join(Environment.CurrentDirectory, "ass", path[6..]);
+            path = Path.Join(Environment.CurrentDirectory, "assets", path[9..]);
         }
         else if (path.StartsWith("user://"))
         {

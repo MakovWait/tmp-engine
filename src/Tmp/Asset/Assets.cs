@@ -6,22 +6,22 @@ public interface IAssets : IDisposable, IAssetsSource
 {
     public void AddLoader(IAssetLoader loader);
 
-    public IAss<T> AddMem<T>(string name, T asset);
+    public IAsset<T> AddMem<T>(string name, T asset);
     
     public void Reload(AssetPath path);
     
-    public IAss Load(AssetPath path);
+    public IAsset Load(AssetPath path);
 }
 
 // TODO stupid name
 public interface IAssetsSource
 {
-    public IAss<T> Load<T>(AssetPath path);
+    public IAsset<T> Load<T>(AssetPath path);
 }
 
 public sealed class Assets : IAssets
 {
-    private readonly Dictionary<AssetPath, IAss> _assets = new();
+    private readonly Dictionary<AssetPath, IAsset> _assets = new();
     private readonly List<IAssetLoader> _loaders = [];
 
     public void AddLoader(IAssetLoader loader)
@@ -29,12 +29,12 @@ public sealed class Assets : IAssets
         _loaders.Add(loader);
     }
 
-    public IAss<T> AddMem<T>(string name, T asset)
+    public IAsset<T> AddMem<T>(string name, T asset)
     {
         AssetPath path = Path.Join("mem://", name);
         return RegisterAsset(
             path,
-            new Ass<T>(
+            new _Asset<T>(
                 asset,
                 path,
                 new ReloadConst<T>(asset)
@@ -42,17 +42,17 @@ public sealed class Assets : IAssets
         );
     }
 
-    public IAss<T> Load<T>(AssetPath path)
+    public IAsset<T> Load<T>(AssetPath path)
     {
         if (_assets.ContainsKey(path))
         {
             return GetLoaded<T>(path);
         }
         var asset = Load(path);
-        return (IAss<T>)asset;
+        return (IAsset<T>)asset;
     }
 
-    public IAss Load(AssetPath path)
+    public IAsset Load(AssetPath path)
     {
         if (_assets.ContainsKey(path))
         {
@@ -77,18 +77,18 @@ public sealed class Assets : IAssets
         throw new Exception("Loader not found!!1");
     }
 
-    private IAss GetLoaded(AssetPath path)
+    private IAsset GetLoaded(AssetPath path)
     {
         return _assets[path];
     }
     
-    private IAss<T> GetLoaded<T>(AssetPath path)
+    private IAsset<T> GetLoaded<T>(AssetPath path)
     {
         var asset = _assets[path];
-        return (IAss<T>)asset;
+        return (IAsset<T>)asset;
     }
     
-    private T RegisterAsset<T>(AssetPath path, T asset) where T : IAss
+    private T RegisterAsset<T>(AssetPath path, T asset) where T : IAsset
     {
         _assets[path] = asset;
         return asset;
@@ -110,11 +110,11 @@ public sealed class Assets : IAssets
         }
     }
 
-    private class ResultMapperUntypedRes(Assets self, AssetPath path, IAssetLoader loader) : IResultMapper<IAss>
+    private class ResultMapperUntypedRes(Assets self, AssetPath path, IAssetLoader loader) : IResultMapper<IAsset>
     {
-        public IAss Map<T>(T value)
+        public IAsset Map<T>(T value)
         {
-            return self.RegisterAsset(path, new Ass<T>(
+            return self.RegisterAsset(path, new _Asset<T>(
                 value,
                 path,
                 new ReloadDefault<T>(self, loader, path)

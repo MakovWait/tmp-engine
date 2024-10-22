@@ -2,11 +2,12 @@ using System.Diagnostics;
 
 namespace Tmp.Asset;
 
-internal sealed class Ass<T>(
+// TODO find another way to avoid the namespace collision 😥
+internal sealed class _Asset<T>(
     T value,
     AssetPath path,
     IReload<T> reload
-) : IAss<T>
+) : IAsset<T>
 {
     private T _value = value;
     private bool _disposed;
@@ -39,14 +40,14 @@ internal sealed class Ass<T>(
     }
 }
 
-public interface IAss : IDisposable
+public interface IAsset : IDisposable
 {
     AssetPath Path { get; }
     
     void Reload();
 }
 
-public interface IAss<out T> : IAss
+public interface IAsset<out T> : IAsset
 {
     T Get();
 }

@@ -120,7 +120,7 @@ public static class Project
                             var transform = self.UseTransform2D();
                             var canvasItem = self.UseCanvasItem(transform);
 
-                            var texture = self.UseAss<ITexture2D>("ass://test.gres");
+                            var texture = self.UseAsset<ITexture2D>("assets://test.jass");
 
                             self.UseEffect(() =>
                             {

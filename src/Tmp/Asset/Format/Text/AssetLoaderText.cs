@@ -15,7 +15,7 @@ public class AssetLoaderText : IAssetLoader
     
     public bool MatchPath(AssetPath path)
     {
-        return path.Extension == "gres";
+        return path.Extension == "jass";
     }
 
     public T Load<T>(AssetPath path, IAssetsSource subAssets, IResultMapper<T> resultMapper)
@@ -55,7 +55,7 @@ public class SerializeInputToml(IAssetsSource assets, TomlNode root) : ISerializ
         return loc.AsString.Value;
     }
 
-    public IAss<T> ReadSubRes<T>(string name)
+    public IAsset<T> ReadSubRes<T>(string name)
     {
         var loc = root[name];
         return assets.Load<T>(loc["path"].AsString.Value);
