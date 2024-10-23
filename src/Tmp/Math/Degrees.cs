@@ -1,8 +1,4 @@
-using System.Numerics;
-
 namespace Tmp.Math;
-
-public interface IDegrees<T> where T : INumber<T>;
 
 public readonly record struct Degrees(float Value)
 {
