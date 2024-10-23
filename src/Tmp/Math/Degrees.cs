@@ -17,6 +17,10 @@ public readonly record struct Degrees(float Value)
     public static Degrees operator -(Degrees a, Degrees b) => new(a.Value - b.Value);
     public static Degrees operator +(Degrees a, Radians b) => new(a.Value + b.ToDeg());
     public static Degrees operator -(Degrees a, Radians b) => new(a.Value - b.ToDeg());
+    public static Degrees operator +(Degrees a, float b) => new(a.Value + b);
+    public static Degrees operator -(Degrees a, float b) => new(a.Value - b);
+    public static Degrees operator +(Degrees a, int b) => new(a.Value + b);
+    public static Degrees operator -(Degrees a, int b) => new(a.Value - b);
     // public static Degrees operator *(Degrees a, Degrees b) => new(a.Value * b.Value);
     public static Degrees operator *(Degrees a, float b) => new(a.Value * b);
     public static Degrees operator *(Degrees a, int b) => new(a.Value * b);

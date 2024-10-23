@@ -13,6 +13,10 @@ public readonly record struct Radians(float Value)
     public static Radians operator -(Radians a, Radians b) => new(a.Value - b.Value);
     public static Degrees operator +(Radians a, Degrees b) => new(a.Value + b.ToRad());
     public static Degrees operator -(Radians a, Degrees b) => new(a.Value - b.ToRad());
+    public static Degrees operator +(Radians a, float b) => new(a.Value + b);
+    public static Degrees operator -(Radians a, float b) => new(a.Value - b);
+    public static Degrees operator +(Radians a, int b) => new(a.Value + b);
+    public static Degrees operator -(Radians a, int b) => new(a.Value - b);
     // public static Radians operator *(Radians a, Radians b) => new(a.Value * b.Value);
     public static Radians operator *(Radians a, float b) => new(a.Value * b);
     public static Radians operator *(Radians a, int b) => new(a.Value * b);

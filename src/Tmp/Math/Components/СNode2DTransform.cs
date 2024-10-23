@@ -19,7 +19,7 @@ public sealed class СNode2DTransform : INode2DTransform
     private bool _isGlobalInvalid = true;
     private Vector2 _position;
     private Radians _rotation;
-    private float _skew;
+    private Radians _skew;
     private Vector2 _scale = new(1, 1);
 
     public Transform2D Local
@@ -46,7 +46,7 @@ public sealed class СNode2DTransform : INode2DTransform
         set => SetScale(value);
     }
 
-    public float Skew
+    public Radians Skew
     {
         get => GetSkew();
         set => SetSkew(value);

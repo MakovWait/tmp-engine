@@ -48,7 +48,7 @@ public struct Transform2D : IEquatable<Transform2D>
     }
 
     /// <summary>Returns the transform's skew (in radians).</summary>
-    public readonly float Skew
+    public readonly Radians Skew
     {
         get
         {
@@ -406,7 +406,7 @@ public struct Transform2D : IEquatable<Transform2D>
     /// <param name="scale">The scale of the new transform.</param>
     /// <param name="skew">The skew of the new transform, in radians.</param>
     /// <param name="origin">The origin vector, or column index 2.</param>
-    public Transform2D(Radians rotation, Vector2 scale, float skew, Vector2 origin)
+    public Transform2D(Radians rotation, Vector2 scale, Radians skew, Vector2 origin)
     {
         (float Sin1, float Cos1) = Mathf.SinCos(rotation);
         (float Sin2, float Cos2) = Mathf.SinCos(rotation + skew);
