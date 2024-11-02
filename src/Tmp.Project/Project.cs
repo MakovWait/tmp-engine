@@ -1,30 +1,50 @@
 ﻿using Raylib_cs;
+using Tmp.Asset.BuiltIn.Texture;
+using Tmp.Asset.Components;
 using Tmp.Core;
-using Tmp.Core.Plugins;
-using Tmp.Core.Plugins.Sources;
 using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Math.Components;
 using Tmp.Render.Components;
-using Tmp.Asset.BuiltIn.Texture;
-using Tmp.Asset.Components;
-using Tmp.Window;
+using Tmp.Window.Components;
 
 namespace Tmp.Project;
 
 public static class Project
 {
-    public static IPluginSource<App> GetPlugins()
+    public static Component GetRoot()
     {
-        return new PluginSourceSequence<App>([
-            new PluginWindow(new WindowSettings
+        return new CWindow(new WindowSettings
+        {
+            Title = "Hello world!",
+            Size = new Vector2I(800, 450),
+            TargetFps = 60
+        })
+        {
+            new CNode2DTransformRoot
             {
-                Title = "Hello world!",
-                Size = new Vector2I(800, 450),
-                TargetFps = 60
-            }),
-            new PluginTree(InitTree),
-        ]);
+                new CCanvasItem(new()
+                {
+                    OnDraw = ctx =>
+                    {
+                        ctx.DrawFps();
+                    }
+                })
+                {
+                    new CCanvasLayer()
+                    {
+                        new CCanvasItem(new()
+                        {
+                            OnDraw = ctx =>
+                            {
+                                ctx.DrawFps();
+                            }
+                        })
+                    },
+                    new CCamera2D(400, 225)
+                }
+            }
+        };
     }
 
     private static void InitTree2(App tree)

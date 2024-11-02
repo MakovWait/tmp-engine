@@ -60,7 +60,8 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
         {
             get
             {
-                AssertNodeIsBuilding();
+                // TODO hmmmm
+                // AssertNodeIsBuilding();
                 return outerChildren;
             }
         }

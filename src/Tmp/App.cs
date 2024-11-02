@@ -1,5 +1,4 @@
 using Raylib_cs;
-using Tmp.Core.Plugins;
 using Tmp.Core.Redot;
 using Tmp.Core.Resource;
 
@@ -26,21 +25,16 @@ public readonly record struct PostDraw;
 
 public sealed class App : IRunnableApp, IResources, ITreeBuilder
 {
-    public event Action? PreStart; 
-    public event Action? PostClose; 
-    
-    private readonly IPluginSource<App> _pluginsToInstall;
-    private readonly InstalledPluginsFor<App> _installedPlugins;
     private readonly Resources _resources = new();
     private readonly Tree _tree = new(isReady: false);
+    private readonly Component _root;
     private IAppRunner _runner = new IAppRunner.Default();
     
     public bool ShouldClose { get; set; }
 
-    public App(IPluginSource<App> pluginsToInstall)
+    public App(Component root)
     {
-        _pluginsToInstall = pluginsToInstall;
-        _installedPlugins = new InstalledPluginsFor<App>(this);
+        _root = root;
     }
 
     public void SetRunner(IAppRunner runner) 
@@ -50,13 +44,12 @@ public sealed class App : IRunnableApp, IResources, ITreeBuilder
     
     public async Task Run()
     {
-        await InstallPlugins();
         _runner.Run(this);
     }
 
     public void Start()
     {
-        PreStart?.Invoke();
+        AttachToRoot(_root);
         _tree.Build();
     }
 
@@ -76,13 +69,6 @@ public sealed class App : IRunnableApp, IResources, ITreeBuilder
     public void Close()
     {
         _tree.Free();
-        PostClose?.Invoke();
-    }
-
-    private async Task InstallPlugins()
-    {
-        await _pluginsToInstall.AddTo(_installedPlugins);
-        await _installedPlugins.Finish();
     }
 
     void IResources.Set<T>(T value)

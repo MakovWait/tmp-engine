@@ -3,6 +3,7 @@ using Tmp.Core;
 using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Render;
+using Tmp.Window.Components;
 
 namespace Tmp.Window.Rl;
 

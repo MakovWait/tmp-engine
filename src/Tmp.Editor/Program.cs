@@ -3,27 +3,25 @@ using Raylib_cs;
 using rlImGui_cs;
 using Tmp;
 using Tmp.Core;
-using Tmp.Core.Plugins;
-using Tmp.Core.Plugins.Sources;
 using Tmp.Core.Redot;
-using Tmp.Core.Resource;
 using Tmp.Math;
 using Tmp.Project;
 using Tmp.Render;
 using Tmp.Window;
+using Tmp.Window.Components;
 
-var app = new App(new PluginSourceSequence<App>([
-    new DebugEditor(),
-    Project.GetPlugins(),
-]));
+var app = new App(new CWindowsImGui
+{
+    Project.GetRoot()
+});
 await app.Run();
 
-internal class DebugEditor() : PluginWrap<App>(new PluginAnonymous<App>("debug-editor")
+public class CWindowsImGui() : Component(self =>
 {
-    OnBuild = app =>
-    {
-        app.SetRes<IWindows>(new WindowsImGui());
-    }
+    var windows = new WindowsImGui();
+    self.CreateContext<IWindows>(windows);
+    
+    self.UseCleanup(() => windows.Close());
 });
 
 internal class WindowImGui(AppViewport viewport) : IWindow, IAppViewportTarget
