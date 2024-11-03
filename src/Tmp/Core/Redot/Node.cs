@@ -268,6 +268,20 @@ public class Node
         newParent.OnEnterTree();
     }
 
+    public void Replace(IComponent component)
+    {
+        var curParent = _parent!;
+        curParent.RemoveChild(this);
+        
+        var node = curParent.CreateSubChild(component);
+        foreach (var child in GetChildren().ToArray())
+        {
+            child.ReparentInternal(node);
+        }
+        node.OnEnterTree();
+        QueueFree();
+    }
+
     public void Undecorate()
     {
         var curParent = _parent!;
