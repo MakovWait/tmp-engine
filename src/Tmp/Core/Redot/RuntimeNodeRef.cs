@@ -7,19 +7,24 @@ public readonly struct RuntimeNodeRef(Node node)
     [Obsolete("Not really obsolete but wanna make an accent that using it is not welcome")]
     public Node Unchecked { get; } = node;
 
-    public void CreateChild(Component component)
+    public void CreateChild(IComponent component)
     {
         node.CallDeferred(t => t.CreateChild(component));
     }
     
-    public void DecorateUp(Component component)
+    public void DecorateUp(IComponent component)
     {
         node.CallDeferred(t => t.DecorateUp(component));
     }
     
-    public void DecorateDown(Component component)
+    public void DecorateDown(IComponent component)
     {
         node.CallDeferred(t => t.DecorateDown(component));
+    }
+    
+    public void ReplaceWith(IComponent component)
+    {
+        node.CallDeferred(t => t.Replace(component));
     }
     
     public void Undecorate()
