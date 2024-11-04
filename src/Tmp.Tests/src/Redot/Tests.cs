@@ -163,6 +163,29 @@ public class ContextTests
         Assert.Fail();
     }
     
+    [Test]
+    public void TestEffectWithDepIsCalledOnce()
+    {
+        var tree = new Tree();
+        
+        var calls = 0;
+        tree.AttachToRoot(new Component(compA =>
+        {
+            compA.CreateContext(1);
+
+            return new Component(compB =>
+            {
+                var i = compB.Use<int>();
+                compB.UseEffect(() =>
+                {
+                    calls += 1;
+                }, [i]);
+            });
+        }));
+        
+        tree.Update();
+        Assert.That(calls, Is.EqualTo(1));
+    }
     
     [Test]
     public void TestAfterCallback()
@@ -280,6 +303,45 @@ public class ContextTests
                     Assert.Pass();
                 });
             });
+        }));
+        tree.Update();
+        Assert.Fail();
+    }
+    
+    [Test]
+    public void TestContextOverrideViaNewParent()
+    {
+        int calls = 0;
+        
+        var tree = new Tree();
+        
+        tree.DecorateRootUp(new Component(compA =>
+        {
+            compA.CreateContext(1);
+        }));
+        
+        tree.AttachToRoot(new Component(compB =>
+        {
+            var i = compB.Use<int>();
+            compB.UseEffect(() =>
+            {
+                calls += 1;
+                if (calls == 1)
+                {
+                    Assert.That(i.Get(), Is.EqualTo(1));
+                }
+
+                if (calls == 2)
+                {
+                    Assert.That(i.Get(), Is.EqualTo(2));
+                    Assert.Pass();
+                }
+            }, [i]);
+        }));
+        
+        tree.DecorateRootUp(new Component(compA =>
+        {
+            compA.CreateContext(2);
         }));
         tree.Update();
         Assert.Fail();
