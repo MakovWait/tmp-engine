@@ -35,6 +35,6 @@ public class CSubViewport(CSubViewport.Props props) : Component(self =>
     {
         public Vector2I Size { get; init; }
         
-        public IDeferredValueMut<ITexture2D> Texture { get; init; }
+        public IRefMut<ITexture2D?> Texture { get; init; }
     }
 }

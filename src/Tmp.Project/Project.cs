@@ -10,6 +10,24 @@ using Tmp.Window.Components;
 
 namespace Tmp.Project;
 
+public class Delay(int ms) : Component(self =>
+{
+    var childRef = self.UseRef<RuntimeNodeRef?>();
+    
+    self.UseTask(token => Task.Delay(ms, token), _ =>
+    {
+        childRef.GetNotNull().ReplaceWith(new Component().WithChildren(self.Children));
+    }, []);
+
+    return new Component(self =>
+    {
+        self.On<Update>(_ =>
+        {
+            Console.WriteLine("loading....");
+        });
+    }).WithRef(childRef);
+});
+
 public static class Project
 {
     public static Component GetRoot()
@@ -21,27 +39,30 @@ public static class Project
             TargetFps = 60
         })
         {
-            new CNode2DTransformRoot
+            new Delay(3000)
             {
-                new CCanvasItem(new()
+                new CNode2DTransformRoot
                 {
-                    OnDraw = ctx =>
+                    new CCanvasItem(new()
                     {
-                        ctx.DrawFps();
-                    }
-                })
-                {
-                    new CCanvasLayer()
-                    {
-                        new CCanvasItem(new()
+                        OnDraw = ctx =>
                         {
-                            OnDraw = ctx =>
+                            ctx.DrawFps();
+                        }
+                    })
+                    {
+                        new CCanvasLayer()
+                        {
+                            new CCanvasItem(new()
                             {
-                                ctx.DrawFps();
-                            }
-                        })
-                    },
-                    new CCamera2D(400, 225)
+                                OnDraw = ctx =>
+                                {
+                                    ctx.DrawFps();
+                                }
+                            })
+                        },
+                        new CCamera2D(400, 225)
+                    }
                 }
             }
         };
@@ -79,7 +100,7 @@ public static class Project
         tree.DecorateRootUp(new CNode2DTransformRoot());
         tree.AttachToRoot(new Component(self =>
         {
-            var subViewportTexture = new DeferredValue<ITexture2D>();
+            var subViewportTexture = self.UseRef<ITexture2D?>();
 
             return
             [
@@ -148,7 +169,7 @@ public static class Project
                                 // transform.Get().Scale = new Vector2(2, 2);
                                 // transform.Get().Rotation = new Degrees(45);
                                 // transform.Get().Position = new Vector2(6, 6);
-                            }, [transform]);
+                            }, []);
 
                             self.On<Update>(dt => { transform.Get().Rotation += 45.DegToRad() * dt; });
 
@@ -181,7 +202,10 @@ public static class Project
                 {
                     Transform2D = new Transform2D(0, new Vector2(-400, -225)),
 
-                    OnDraw = ctx => { subViewportTexture.Get().Draw(ctx, Vector2.Zero, Color.White); }
+                    OnDraw = ctx =>
+                    {
+                        subViewportTexture.GetNotNull().Draw(ctx, Vector2.Zero, Color.White);
+                    }
                 }),
                 new CCanvasItem(new()
                 {
@@ -249,7 +273,7 @@ public static class Project
                         {
                             // transform.Get().Rotation = new Degrees(45);
                             // transform.Get().Position += new Vector2(6, 6);
-                        }, [transform]);
+                        }, []);
 
                         self.On<Update>(dt => { transform.Get().Rotation += 45.DegToRad() * dt; });
 

@@ -97,6 +97,11 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             @unchecked.Call<TState>();
         }
 
+        public IRefMut<T> UseRef<T>(T initial = default!)
+        {
+            return new Ref<T>(initial);
+        } 
+        
         public void UseEffect(Func<Action> effect)
         {
             AssertNodeIsBuilding();
@@ -136,6 +141,30 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
             UseEffect(effect, new EffectDependencies(deps));
         }
 
+        public void UseTask(Func<CancellationToken, Task> taskCtor, Action<Task> callback, IEnumerable<IEffectDependency> deps)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.UseTask(taskCtor, callback, new EffectDependencies(deps));
+        }
+        
+        public void UseTask(Func<CancellationToken, Task> taskCtor, Action<Task> callback, IEffectDependency deps)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.UseTask(taskCtor, callback, deps);
+        }
+        
+        public void UseTask<T>(Func<CancellationToken, Task<T>> taskCtor, Action<Task<T>> callback, IEnumerable<IEffectDependency> deps)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.UseTask(taskCtor, callback, new EffectDependencies(deps));
+        }
+        
+        public void UseTask<T>(Func<CancellationToken, Task<T>> taskCtor, Action<Task<T>> callback, IEffectDependency deps)
+        {
+            AssertNodeIsBuilding();
+            @unchecked.UseTask(taskCtor, callback, deps);
+        }
+        
         public void UseCleanup(Action cleanup)
         {
             UseEffect(() => cleanup, []);
@@ -291,3 +320,27 @@ public interface IComponent
 }
 
 public interface IFakeEnumerable;
+
+public class ComponentWithRef(IComponent origin, IRefMut<RuntimeNodeRef?> nodeRef) : IComponent
+{
+    public IEnumerable<IComponent> Build(Node node)
+    {
+        var children = origin.Build(node); 
+        nodeRef.Set(new RuntimeNodeRef(node));
+        return children;
+    }
+}
+
+public static class ComponentEx
+{
+    public static IComponent WithRef(this IComponent self, IRefMut<RuntimeNodeRef?> nodeRef)
+    {
+        return new ComponentWithRef(self, nodeRef);
+    } 
+    
+    public static Component WithChildren(this Component self, List<IComponent> children)
+    {
+        self.Children = children;
+        return self;
+    } 
+}

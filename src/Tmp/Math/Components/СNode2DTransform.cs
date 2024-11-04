@@ -1,4 +1,5 @@
-﻿using Tmp.Core.Redot;
+﻿using Tmp.Core;
+using Tmp.Core.Redot;
 
 namespace Tmp.Math.Components;
 
@@ -307,28 +308,29 @@ public static class NodeTransformExtensions
         return self.Use<СNode2DTransform>();
     }
 
-    public static IDeferredValue<СNode2DTransform> UseTransform2D(this Component.Self self, Transform2D? initial = null)
+    public static IRef<СNode2DTransform> UseTransform2D(this Component.Self self, Transform2D? initial = null)
     {
         var parentTransform = self.UseParentTransform2D();
-        var transform = self.CreateContext(
+        var transformRef = new Ref<СNode2DTransform>(
             new СNode2DTransform { Local = initial ?? Transform2D.Identity }
         );
+        var transformCtx = self.CreateContext(transformRef.Get());
 
         self.UseEffect(() =>
         {
-            ((INode2DTransform)transform.Get()).AddTo(parentTransform.Get());
-            return () => ((INode2DTransform)transform.Get()).ClearParent();
+            ((INode2DTransform)transformCtx.Get()).AddTo(parentTransform.Get());
+            return () => ((INode2DTransform)transformCtx.Get()).ClearParent();
         }, [parentTransform]);
 
-        return new DeferredValueAnonymous<СNode2DTransform>(transform.Get);
+        return transformRef;
     }
 
-    public static Vector2 Position(this IDeferredValue<СNode2DTransform> self)
+    public static Vector2 Position(this IScalar<СNode2DTransform> self)
     {
         return self.Get().Position;
     }
 
-    public static Vector2 GlobalPosition(this IDeferredValue<СNode2DTransform> self)
+    public static Vector2 GlobalPosition(this IScalar<СNode2DTransform> self)
     {
         return self.Get().GlobalPosition;
     }

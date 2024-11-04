@@ -119,6 +119,27 @@ public class Node
         UseEffectWithDeps(effect, deps, _lifecycleEffectsAfter);
     }
 
+    public void UseTask<T>(Func<CancellationToken, T> taskCtor, Action<T> callback, IEffectDependency deps) where T : Task
+    {
+        UseEffect(() =>
+        {
+            var tokenSource = new CancellationTokenSource();
+            var token = tokenSource.Token;
+            var task = taskCtor(token);
+            task.ContinueWith(_ =>
+            {
+                CallDeferred(() =>
+                {
+                    callback.Invoke(task);
+                });
+            }, token);
+            return () =>
+            {
+                tokenSource.Cancel();
+            };
+        }, deps);
+    }
+
     private void UseEffectWithDeps(Func<Action> effect, IEffectDependency deps, LifecycleEffects effects)
     {
         Action? cleanup = null;

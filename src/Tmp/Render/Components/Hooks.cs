@@ -6,7 +6,7 @@ namespace Tmp.Render.Components;
 
 public static class Hooks
 {
-    public static CanvasItem UseCanvasItem(this Component.Self self, IDeferredValue<СNode2DTransform> transform)
+    public static CanvasItem UseCanvasItem(this Component.Self self, IScalar<СNode2DTransform> transform)
     {
         var parent = self.Use<ICanvasItemContainer>();
         var item = new CanvasItem();
