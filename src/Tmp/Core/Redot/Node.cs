@@ -18,6 +18,7 @@ public class Node
     private readonly Callbacks _callbacksOn = new();
     private readonly Callbacks _callbacksAfter = new();
     private readonly ContextValues _contextValues = new();
+    private readonly CreatedContextValues _createdContextValues = new();
     private readonly LifecycleEffects _lifecycleEffectsOn = new();
     private readonly LifecycleEffects _lifecycleEffectsAfter = new();
     private readonly Children _children = new();
@@ -49,7 +50,9 @@ public class Node
     public ICreatedContextValue<T> CreateContext<T>(T val)
     {
         _ctx.Create(val);
-        return new CreatedContextValue<T>(_ctx);
+        var createdCtxValue = new CreatedContextValue<T>(_ctx, this);
+        _createdContextValues.Add(createdCtxValue);
+        return createdCtxValue;
     }
     
     public IContextValue<T> Use<T>()
@@ -409,6 +412,16 @@ public class Node
         }
     }
 
+    private class CreatedContextValues
+    {
+        private readonly List<ICreatedContextValue> _values = [];
+        
+        public void Add<T>(CreatedContextValue<T> val)
+        {
+            _values.Add(val);
+        }
+    }
+    
     private class ContextValues
     {
         private readonly List<IContextValue> values = [];
@@ -644,7 +657,7 @@ public class Node
         }
     }
 
-    private class CreatedContextValue<T>(Context ctx) : ICreatedContextValue<T>
+    private class CreatedContextValue<T>(Context ctx, Node _) : ICreatedContextValue<T>, ICreatedContextValue
     {
         public T Get()
         {
