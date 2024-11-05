@@ -150,7 +150,7 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
         public void UseTask(Func<CancellationToken, Task> taskCtor, Action<Task> callback, IEffectDependency deps)
         {
             AssertNodeIsBuilding();
-            @unchecked.UseTask(taskCtor, callback, deps);
+            @unchecked.UseTask(taskCtor, callback, new EffectDependencies([deps]));
         }
         
         public void UseTask<T>(Func<CancellationToken, Task<T>> taskCtor, Action<Task<T>> callback, IEnumerable<IEffectDependency> deps)
@@ -162,7 +162,7 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
         public void UseTask<T>(Func<CancellationToken, Task<T>> taskCtor, Action<Task<T>> callback, IEffectDependency deps)
         {
             AssertNodeIsBuilding();
-            @unchecked.UseTask(taskCtor, callback, deps);
+            @unchecked.UseTask(taskCtor, callback, new EffectDependencies([deps]));
         }
         
         public void UseCleanup(Action cleanup)
@@ -173,7 +173,7 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
         public void UseEffect(Func<Action> effect, IEffectDependency deps)
         {
             AssertNodeIsBuilding();
-            @unchecked.UseEffect(effect, deps);
+            @unchecked.UseEffect(effect, new EffectDependencies([deps]));
         }
 
         public void UseAfterEffect(Func<Action> effect)
@@ -223,7 +223,7 @@ public class Component(Func<Component.Self, IEnumerable<IComponent>> build)
         public void UseAfterEffect(Func<Action> effect, IEffectDependency deps)
         {
             AssertNodeIsBuilding();
-            @unchecked.UseAfterEffect(effect, deps);
+            @unchecked.UseAfterEffect(effect, new EffectDependencies([deps]));
         }
         
         public void QueueFree()

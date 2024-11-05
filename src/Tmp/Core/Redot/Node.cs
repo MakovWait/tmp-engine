@@ -112,17 +112,17 @@ public class Node
         return new RuntimeNodeRef(_tree.IdNodeDict.Get(nodeId));
     }
     
-    public void UseEffect(Func<Action> effect, IEffectDependency deps)
+    internal void UseEffect(Func<Action> effect, EffectDependencies deps)
     {
         UseEffectWithDeps(effect, deps, _lifecycleEffectsOn);
     }
     
-    public void UseAfterEffect(Func<Action> effect, IEffectDependency deps)
+    internal void UseAfterEffect(Func<Action> effect, EffectDependencies deps)
     {
         UseEffectWithDeps(effect, deps, _lifecycleEffectsAfter);
     }
 
-    public void UseTask<T>(Func<CancellationToken, T> taskCtor, Action<T> callback, IEffectDependency deps) where T : Task
+    internal void UseTask<T>(Func<CancellationToken, T> taskCtor, Action<T> callback, EffectDependencies deps) where T : Task
     {
         UseEffect(() =>
         {
@@ -143,14 +143,12 @@ public class Node
         }, deps);
     }
 
-    private void UseEffectWithDeps(Func<Action> effect, IEffectDependency deps, LifecycleEffects effects)
+    // TODO expose init effect and remove EffectDependencies.IsEmpty
+    private void UseInitEffect(Func<Action> effect, LifecycleEffects effects)
     {
         Action? cleanup = null;
         effects.Add(new Effect(() =>
         {
-            deps.AboutToChange += Cleanup;
-            deps.Changed += Trigger;
-
             if (_firstTimeEntersTree)
             {
                 cleanup = effect();
@@ -158,25 +156,49 @@ public class Node
                 
             return () =>
             {
-                deps.AboutToChange -= Cleanup;
-                deps.Changed -= Trigger;
                 if (StateIs(NodeState.Freed))
                 {
-                    Cleanup();
+                    cleanup?.Invoke();
+                    cleanup = null;
                 }
             };
-
-            void Cleanup()
+        }));  
+    }
+    
+    private void UseEffectWithDeps(Func<Action> effect, EffectDependencies deps, LifecycleEffects effects)
+    {
+        if (deps.IsEmpty)
+        {
+            UseInitEffect(effect, effects);
+        }
+        else
+        {
+            Action? cleanup = null;
+            effects.Add(new Effect(() =>
             {
-                cleanup?.Invoke();
-                cleanup = null;
-            }
+                deps.AboutToChange += Cleanup;
+                deps.Changed += Trigger;
+                Trigger();
                 
-            void Trigger()
-            {
-                cleanup = effect();
-            }
-        }));
+                return () =>
+                {
+                    deps.AboutToChange -= Cleanup;
+                    deps.Changed -= Trigger;
+                    Cleanup();
+                };
+
+                void Cleanup()
+                {
+                    cleanup?.Invoke();
+                    cleanup = null;
+                }
+                
+                void Trigger()
+                {
+                    cleanup = effect();
+                }
+            }));   
+        }
     }
     
     public void AddChild(Node node)
@@ -682,9 +704,13 @@ internal class EffectDependencies : IEffectDependency
     public event Action? AboutToChange;
     public event Action? Changed;
     
+    public bool IsEmpty { get; }
+    
     public EffectDependencies(IEnumerable<IEffectDependency> dependencies)
     {
-        foreach (var dependency in dependencies)
+        var deps = dependencies.ToArray();
+        IsEmpty = deps.Length == 0;
+        foreach (var dependency in deps)
         {
             dependency.AboutToChange += () => AboutToChange?.Invoke();
             dependency.Changed += () => Changed?.Invoke();
