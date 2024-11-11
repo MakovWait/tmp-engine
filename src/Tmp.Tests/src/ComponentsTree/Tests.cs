@@ -203,3 +203,85 @@ public class ContextTests
         Assert.Fail();
     }
 }
+
+public class CallbacksTests
+{
+    [Test]
+    public void SmokeOn()
+    {
+        var tree = new Tree();
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.On<TestCallback>(args =>
+            {
+                Assert.That(args.Value, Is.EqualTo(10));
+                Assert.Pass();
+            });
+            return [];
+        }));
+        
+        tree.Call(new TestCallback(10));
+        
+        Assert.Fail();
+    }
+    
+    [Test]
+    public void SmokeLate()
+    {
+        var tree = new Tree();
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.OnLate<TestCallback>(args =>
+            {
+                Assert.That(args.Value, Is.EqualTo(10));
+                Assert.Pass();
+            });
+            return [];
+        }));
+        
+        tree.Call(new TestCallback(10));
+        
+        Assert.Fail();
+    }
+    
+    [Test]
+    public void CallbacksOrder()
+    {
+        var tree = new Tree();
+        Calls calls = [];
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.On<TestCallback>(_ =>
+            {
+                calls.Log(1);
+            });
+            
+            self.OnLate<TestCallback>(_ =>
+            {
+                calls.Log(4);
+            });
+            
+            return new ComponentFunc(self =>
+            {
+                self.On<TestCallback>(_ =>
+                {
+                    calls.Log(2);
+                });
+            
+                self.OnLate<TestCallback>(_ =>
+                {
+                    calls.Log(3);
+                });
+
+                return [];
+            });
+        }));
+        
+        tree.Call(new TestCallback(10));
+        
+        calls.AssertOrderIs([1, 2, 3, 4]);
+    }
+
+    private readonly record struct TestCallback(int Value);
+}

@@ -5,8 +5,10 @@ namespace Tmp.Core.Comp;
 public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INodeInit
 {
     private Node? _parent;
-    private readonly List<Node> _children = [];
     private readonly Context _ctx = new();
+    private readonly Children _children = new();
+    private readonly Callbacks _callbacks = new();
+    private readonly Callbacks _lateCallbacks = new();
 
     private readonly Queue<IScope> _onMountScopes = [];
     
@@ -28,22 +30,13 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
         {
             _onMountScopes.Dequeue().Trigger();
         }
-
-        foreach (var child in _children)
-        {
-            child.Mount();
-        }
+        _children.Mount();
     }
 
     public void Free()
     {
         _scope!.Clean();
-
-        foreach (var child in _children)
-        {
-            child.Free();
-        }
-
+        _children.Free();
         _state = NodeState.Freed;
     }
     
@@ -63,9 +56,11 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
     
     public void ClearChildren()
     {
-        for (var i = _children.Count - 1; i >= 0; i--)
+        _children.Clear();
+        
+        for (var i = _children.List.Count - 1; i >= 0; i--)
         {
-            var child = _children[i];
+            var child = _children.List[i];
             RemoveChild(child);
             child.Free();
         }
@@ -203,6 +198,23 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
         return FindInContext<T>();
     }
 
+    public void Call<T>(T args)
+    {
+        _callbacks.Call(args);
+        _children.Call(args);
+        _lateCallbacks.Call(args);
+    }
+
+    public void On<T>(Action<T> action)
+    {
+        _callbacks.Add(action);
+    }
+
+    public void OnLate<T>(Action<T> action)
+    {
+        _lateCallbacks.Add(action);
+    }
+
     private T FindInContext<T>()
     {
         if (_parent == null)
@@ -216,6 +228,50 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
         }
         
         return _parent!.FindInContext<T>();
+    }
+    
+    private class Children
+    {
+        public readonly List<Node> List = [];
+
+        public void Add(Node child)
+        {
+            List.Add(child);
+        }
+
+        public void Remove(Node child)
+        {
+            List.Remove(child);
+        }
+        
+        public void Call<T>(T state)
+        {
+            foreach (var child in List)
+            {
+                child.Call(state);
+            }
+        }
+
+        public void Free()
+        {
+            foreach (var child in List)
+            {
+                child.Free();
+            }
+        }
+
+        public void Mount()
+        {
+            foreach (var child in List)
+            {
+                child.Mount();
+            }
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
     }
     
     private class Context
@@ -242,6 +298,40 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
             _map[typeof(T)] = val;
         }
     }
+    
+    internal class Callbacks
+    {
+        private readonly List<ICallback> _callbacks = [];
+    
+        public void Call<T>(T state)
+        {
+            foreach (var callback in _callbacks)
+            {
+                callback.Handle(state);
+            }
+        }
+
+        public void Add<T>(Action<T> callback)
+        {
+            _callbacks.Add(new Callback<T>(callback));
+        }
+
+        private interface ICallback
+        {
+            void Handle<T>(T state);
+        }
+        
+        private class Callback<Y>(Action<Y> callback) : ICallback
+        {
+            public void Handle<T>(T state)
+            {
+                if (state is Y casted)
+                {
+                    callback(casted);
+                }
+            }
+        }
+    }
 }
 
 public class Tree
@@ -264,6 +354,11 @@ public class Tree
     {
     }
 
+    public void Call<T>(T args)
+    {
+        _root.Call(args);
+    }
+    
     public void Build(IComponent component)
     {
         _root = component.Build(this, null);
@@ -297,6 +392,12 @@ public interface INodeInit
     T CreateContext<T>(T value);
     
     T UseContext<T>();
+
+    void Call<T>(T args);
+    
+    void On<T>(Action<T> action);
+    
+    void OnLate<T>(Action<T> action);
 }
 
 public static class NodeInitEx
