@@ -6,6 +6,7 @@ namespace Tmp.Core.Comp;
 public class Component : IComponent, IEnumerable<IComponent>
 {
     public Components Children { get; init; } = [];
+    public string? Name { get; init; } = null;
 
     private Node? _self;
     private Tree? _tree;
@@ -16,7 +17,7 @@ public class Component : IComponent, IEnumerable<IComponent>
     public Node Build(Tree tree, Node? parent)
     {
         _tree = tree;
-        _self = tree.CreateNode();
+        _self = tree.CreateNode(Name ?? "Node");
         parent?.AddChild(_self);
         
         _self.Init(_ =>

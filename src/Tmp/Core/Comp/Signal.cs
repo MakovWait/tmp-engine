@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Tmp.Core.Comp;
 
-[DebuggerDisplay("Name = {_name}")]
+[DebuggerDisplay("Name = {_name}, Value = {_value}")]
 internal class Signal<T> : ISignalMut<T>
 {
     private T _value;
@@ -23,6 +23,12 @@ internal class Signal<T> : ISignalMut<T>
     {
         get => Get();
         set => Set(value);
+    }
+
+    public T UntrackedValue
+    {
+        get => _value;
+        set => _value = value;
     }
 
     public void SetDebugName(string name)
@@ -79,11 +85,15 @@ public interface ISignal
 public interface ISignal<out T> : ISignal
 {
     public T Value { get; }
+    
+    public T UntrackedValue { get; }
 }
 
 public interface ISignalMut<T> : ISignal<T>
 {
     public new T Value { get; set; }
+    
+    public new T UntrackedValue { get; set; }
 }
 
 public static class SignalEx

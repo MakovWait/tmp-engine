@@ -12,6 +12,8 @@ public class Scope(IComputation computation, CurrentScope scope) : IScope, ISign
 
     public bool NoTrack { get; set; } = false;
 
+    public string? Name { get; set; }
+
     public void Bind(IScope child)
     {
         if (_children.Contains(child)) return;
@@ -66,11 +68,6 @@ public class Scope(IComputation computation, CurrentScope scope) : IScope, ISign
         _signals.Clear();
         _name = null;
     }
-
-    public void SetName(string name)
-    {
-        _name = name;
-    }
 }
 
 public class CurrentScope
@@ -87,6 +84,14 @@ public class CurrentScope
         _scopes.Pop();
     }
 
+    public void SetName(string name)
+    {
+        if (Value != null)
+        {
+            Value.Name = name;
+        } 
+    }
+    
     public IScope? Value => _scopes.Count > 0 ? _scopes.Peek() : null;
 }
 
@@ -106,6 +111,8 @@ public class Cleanup(Action action) : ICleanup
 public interface IScope
 {
     public bool NoTrack { get; set; }
+    
+    public string? Name { get; set; }
 
     void Bind(IScope child);
 
@@ -116,8 +123,6 @@ public interface IScope
     void Trigger();
 
     void Clean();
-
-    void SetName(string name);
 }
 
 public interface IComputation

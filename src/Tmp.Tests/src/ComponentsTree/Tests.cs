@@ -11,12 +11,12 @@ public class Tests
         var deferredQueue = new SignalBatch();
         var signals = new Signals(currentScope, deferredQueue);
         var tree = new Tree(currentScope, signals);
-        var node = tree.CreateNode();
+        var node = tree.CreateNode("test");
 
         node.Init(self =>
         {
-            var signal = self.CreateSignal(0).WithName("signal 1");
-            var signal2 = self.CreateSignal(2).WithName("signal 2");
+            var signal = self.UseSignal(0).WithName("signal 1");
+            var signal2 = self.UseSignal(2).WithName("signal 2");
 
             var mem = self.UseMemo(_ =>
             {
@@ -106,7 +106,7 @@ public class Tests
         
         tree.Build(new ComponentFunc(self =>
         {
-            cond = self.CreateSignal(false);
+            cond = self.UseSignal(false);
 
             // var left = new TestComponent("left");
             // var right = new TestComponent("right");
@@ -116,6 +116,7 @@ public class Tests
             // );
             
             return [
+                new ComponentFunc(self => []),
                 new ComponentFunc(self =>
                 {
                     self.OnMount(() =>
@@ -131,11 +132,183 @@ public class Tests
                     return [];
                 }).If(cond)
             ];
-        }));
+        }) {Name = "root"});
 
         cond!.Value = true;
         cond!.Value = false;
         cond!.Value = true;
+    }
+}
+
+public class NodeNameTests
+{
+    [Test]
+    public void TestRenameDoesNotBreakChildrenNameUniqueness()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new Component
+        {
+            Name = "root",
+            Children = [
+                new Component
+                {
+                    Name = "a",
+                },
+                new Component
+                {
+                    Name = "b",
+                },
+            ]
+        });
+
+        var a = tree.Root.GetNode(new NodePath("/root/a"))!;
+        Assert.That(a.Name.Value, Is.EqualTo("a"));
+        a.Name.Value = "b";
+        Assert.That(a.Name.Value, Is.EqualTo("@b@0"));
+    }
+    
+    [Test]
+    public void TestChildrenNameUniquenessInTreeBuild()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new Component
+        {
+            Name = "root",
+            Children = [
+                new Component
+                {
+                    Name = "a",
+                },
+                new Component
+                {
+                    Name = "a",
+                },
+            ]
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(tree.Root.GetNode(new NodePath("/root/a")), Is.Not.Null);
+            Assert.That(tree.Root.GetNode(new NodePath("/root/@a@1")), Is.Not.Null);
+        });
+    }
+    
+    [Test]
+    public void TestChildrenNameUniquenessInAddChild()
+    {
+        var tree = new Tree();
+
+        var root = tree.CreateNode("root");
+        var a = tree.CreateNode("a");
+        var a2 = tree.CreateNode("a");
+        
+        root.AddChild(a);
+        root.AddChild(a2);
+        
+        tree.Build(root);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(a.Name.Value, Is.EqualTo("a"));
+            Assert.That(a2.Name.Value, Is.EqualTo("@a@1"));
+        });
+    }
+    
+    [Test]
+    public void TestNodeNameReactivity()
+    {
+        var tree = new Tree();
+        Action? rename = null;
+        
+        tree.Build(new Component
+        {
+            Name = "root",
+            Children = [
+                new ComponentFunc(self =>
+                {
+                    rename = () => self.Name.Value = "test";
+                    
+                    self.UseEffect(call =>
+                    {
+                        var name = self.Name.Value;
+                        if (call == 2)
+                        {
+                            Assert.That(name, Is.EqualTo("test"));
+                            Assert.Pass(); 
+                        }
+                        return call + 1;
+                    }, 1);
+                    
+                    return [];
+                })
+                {
+                    Name = "a",
+                },
+            ]
+        });
+        
+        rename?.Invoke();
+        Assert.Fail();
+    }
+}
+
+public class NodePathTests
+{
+    [Test]
+    public void Smoke()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new Component
+        {
+            Name = "root",
+            Children = [
+                new Component
+                {
+                    Name = "a",
+                    Children = [
+                        new Component
+                        {
+                            Name = "c"
+                        }
+                    ]
+                },
+                new Component
+                {
+                    Name = "b",
+                },
+            ]
+        });
+        
+        Assert.That(
+            tree.Root.GetNode(new NodePath("/root"))!.Name.Value,
+            Is.EqualTo("root")
+        );
+        
+        Assert.That(
+            tree.Root.GetNode(new NodePath("/root/a"))!.Name.Value,
+            Is.EqualTo("a")
+        );
+
+        var a = tree.Root.GetNode(new NodePath("/root/a"))!;
+        Assert.That(
+            a.GetNode(new NodePath(".."))!.Name.Value,
+            Is.EqualTo("root")
+        );
+        Assert.That(
+            a.GetNode(new NodePath("../b"))!.Name.Value,
+            Is.EqualTo("b")
+        );
+        Assert.That(
+            a.GetNode(new NodePath("."))!.Name.Value,
+            Is.EqualTo("a")
+        );
+        Assert.That(
+            a.GetNode(new NodePath("./c"))!.Name.Value,
+            Is.EqualTo("c")
+        );
     }
 }
 

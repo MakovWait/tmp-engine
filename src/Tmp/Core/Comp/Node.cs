@@ -2,7 +2,8 @@ using System.Diagnostics;
 
 namespace Tmp.Core.Comp;
 
-public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INodeInit
+[DebuggerDisplay("{NodePath}")]
+public class Node : INodeInit
 {
     private Node? _parent;
     private readonly Context _ctx = new();
@@ -14,6 +15,19 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
     
     private NodeState _state = NodeState.Building;
     private Scope? _scope;
+    private readonly Tree _tree;
+    private readonly CurrentScope _currentScope;
+    private readonly Signals _signals;
+    
+    public ISignalMut<string> Name { get; }
+
+    public Node(string initialName, Tree tree, CurrentScope currentScope, Signals signals)
+    {
+        _tree = tree;
+        _currentScope = currentScope;
+        _signals = signals;
+        Name = signals.Create(initialName);
+    }
 
     enum NodeState
     {
@@ -39,12 +53,63 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
         _children.Free();
         _state = NodeState.Freed;
     }
+
+    public Node? GetNode(NodePath nodePath)
+    {
+        Node? current = null;
+        if (!nodePath.IsAbsolute())
+        {
+            current = this;
+        }
+        
+        foreach (var name in nodePath.Names())
+        {
+            Node? next = null;
+            if (name == ".")
+            {
+                next = current;
+            }
+            else if (name == "..")
+            {
+                if (current?._parent is null)
+                {
+                    return null;
+                }
+
+                next = current._parent;
+            }
+            else if (current == null)
+            {
+                if (name.Equals(_tree.Root.Name.UntrackedValue))
+                {
+                    next = _tree.Root;
+                }
+            }
+            else
+            {
+                next = null;
+                var node = current._children.GetByName(name);
+                if (node != null)
+                {
+                    next = node;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            current = next;
+        }
+
+        return current;
+    }
     
     public void AddChild(Node child)
     {
         Debug.Assert(child._parent is null);
         child._parent = this;
         _children.Add(child);
+        ValidateChildName(child);
     }
     
     public void RemoveChild(Node child)
@@ -56,8 +121,6 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
     
     public void ClearChildren()
     {
-        _children.Clear();
-        
         for (var i = _children.List.Count - 1; i >= 0; i--)
         {
             var child = _children.List[i];
@@ -72,9 +135,16 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
             new Computation<Unit>(prev =>
             {
                 init(this);
+                
+                this.UseEffect(() =>
+                {
+                    Name.Get();
+                    _parent?.ValidateChildName(this);
+                });
+                
                 return prev;
             }, new Unit()),
-            currentScope
+            _currentScope
         )
         {
             NoTrack = true
@@ -82,20 +152,28 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
         // currentScope.Value?.Bind(_scope);
         _scope.Trigger();
     }
+
+    private void ValidateChildName(Node child)
+    {
+        var name = child.Name.UntrackedValue;
+        var unique = _children.NameIsUnique(child);
+        if (unique) return;
+        child.Name.Value = $"@{name}@{_children.IndexOf(child)}";
+    }
     
     private void RegisterScope(IScope scope)
     {
-        currentScope.Value?.Bind(scope);
+        _currentScope.Value?.Bind(scope);
     }
 
-    public ISignalMut<T> CreateSignal<T>(T initial)
+    public ISignalMut<T> UseSignal<T>(T initial)
     {
-        return signals.Create(initial);
+        return _signals.Create(initial);
     }
 
     public void OnCleanup(ICleanup cleanup)
     {
-        currentScope.Value?.Bind(cleanup);
+        _currentScope.Value?.Bind(cleanup);
     }
 
     public void OnMount(Action action)
@@ -107,7 +185,7 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
     {
         var effectScope = new Scope(
             new BatchedComputation(this, computation),
-            currentScope
+            _currentScope
         );
         RegisterScope(effectScope);
         if (_state == NodeState.Building)
@@ -122,7 +200,7 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
 
     public ISignal<T> UseMemo<T>(Func<T, T> fn, T initial)
     {
-        var signal = CreateSignal(initial);
+        var signal = UseSignal(initial);
         var memoScope = new Scope(
             new BatchedComputation(
                 this, 
@@ -133,7 +211,7 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
                     return next;
                 }, initial)
             ),
-            currentScope
+            _currentScope
         );
         memoScope.Trigger();
         RegisterScope(memoScope);
@@ -147,7 +225,7 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
 
     public void Untrack<TArgs>(Action<TArgs> action, TArgs args)
     {
-        var scope = currentScope.Value!;
+        var scope = _currentScope.Value!;
         var prev = scope.NoTrack;
         scope.NoTrack = true;
         try
@@ -162,29 +240,29 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
 
     public void Batch<TArgs>(Action<TArgs> action, TArgs args)
     {
-        if (signals.Batched)
+        if (_signals.Batched)
         {
             action(args);
         }
         else
         {
-            var prev = signals.Batched; 
-            signals.Batched = true;
+            var prev = _signals.Batched; 
+            _signals.Batched = true;
             try
             {
                 action(args);
             }
             finally
             {
-                signals.FlushBatches();
-                signals.Batched = prev;
+                _signals.FlushBatches();
+                _signals.Batched = prev;
             }
         }
     }
     
     public void SetScopeName(string name)
     {
-        currentScope.Value?.SetName(name);
+        _currentScope.SetName(name);
     }
 
     public T CreateContext<T>(T value)
@@ -230,8 +308,11 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
         return _parent!.FindInContext<T>();
     }
     
+    private string NodePath => string.Join("/", _parent?.NodePath ?? "", Name.Value);
+    
     private class Children
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         public readonly List<Node> List = [];
 
         public void Add(Node child)
@@ -268,9 +349,34 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
             }
         }
 
-        public void Clear()
+        public int IndexOf(Node node)
         {
-            throw new NotImplementedException();
+            return List.IndexOf(node);
+        }
+
+        public bool NameIsUnique(Node child)
+        {
+            foreach (var node in List)
+            {
+                if (node == child) continue;
+                if (node.Name.UntrackedValue.Equals(child.Name.UntrackedValue))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public Node? GetByName(string name)
+        {
+            foreach (var node in List)
+            {
+                if (node.Name.UntrackedValue.Equals(name))
+                {
+                    return node;
+                }
+            }
+            return null;
         }
     }
     
@@ -334,11 +440,34 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
     }
 }
 
+[DebuggerDisplay("{AsString}")]
+public sealed class NodePath(string path) : IEquatable<string>
+{
+    public bool IsAbsolute()
+    {
+        return path.StartsWith('/');
+    }
+
+    public IReadOnlyList<string> Names()
+    {
+        return path.Split('/').Where(x => !x.Equals("")).ToList();
+    }
+
+    public bool Equals(string? other)
+    {
+        return path.Equals(other);
+    }
+    
+    private string AsString => path;
+}
+
 public class Tree
 {
     private readonly CurrentScope _currentScope;
     private readonly Signals _signals;
     private Node? _root;
+
+    internal Node Root => _root!;
     
     public Tree(CurrentScope currentScope, Signals signals)
     {
@@ -356,7 +485,7 @@ public class Tree
 
     public void Call<T>(T args)
     {
-        _root.Call(args);
+        _root!.Call(args);
     }
     
     public void Build(IComponent component)
@@ -365,19 +494,27 @@ public class Tree
         _root.Mount();
     }
 
-    internal Node CreateNode()
+    public void Build(Node root)
     {
-        return new Node(this, _currentScope, _signals);
+        _root = root;
+        _root.Mount();
+    }
+
+    internal Node CreateNode(string name)
+    {
+        return new Node(name, this, _currentScope, _signals);
     }
 }
 
 public interface INodeInit
 {
+    ISignalMut<string> Name { get; }
+    
     void UseEffect(IComputation computation);
 
     ISignal<T> UseMemo<T>(Func<T, T> fn, T initial);
 
-    ISignalMut<T> CreateSignal<T>(T initial);
+    ISignalMut<T> UseSignal<T>(T initial);
 
     void OnCleanup(ICleanup cleanup);
 
