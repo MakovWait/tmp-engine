@@ -96,6 +96,7 @@ public class Tests
             signal2.Value = 10;
             signal.Value = 11;
         });
+        node.Mount();
     }
 
     [Test]
@@ -137,6 +138,56 @@ public class Tests
         cond!.Value = true;
         cond!.Value = false;
         cond!.Value = true;
+    }
+}
+
+public class UseMemoTests
+{
+    [Test]
+    public void Smoke()
+    {
+        var tree = new Tree();
+        ISignalMut<int>? counter = null;
+        var useMemoCalls = 0;
+        var useEffectCalls = 0;
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            counter = self.UseSignal(0);
+            var doubleCounter = self.UseMemo(
+                _ =>
+                {
+                    useMemoCalls++;
+                    return counter.Value * 2;
+                }, 
+                counter.Value
+            );
+            
+            self.UseEffect(call =>
+            {
+                doubleCounter.Get();
+                doubleCounter.Get();
+                doubleCounter.Get();
+                var doubleValue = doubleCounter.Value; 
+                if (call == 1)
+                {
+                    Assert.That(doubleValue, Is.EqualTo(0));
+                }
+                if (call == 2)
+                {
+                    Assert.That(doubleValue, Is.EqualTo(2));
+                }
+                useEffectCalls = call;
+                return call + 1;
+            }, 1);
+            
+            return [];
+        }));
+
+        Assert.That(useMemoCalls, Is.EqualTo(1));
+        counter!.Value = 1;
+        Assert.That(useMemoCalls, Is.EqualTo(2));
+        Assert.That(useEffectCalls, Is.EqualTo(2));
     }
 }
 
