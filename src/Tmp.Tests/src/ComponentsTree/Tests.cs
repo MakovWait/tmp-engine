@@ -1,4 +1,4 @@
-using Tmp.Core.Components;
+using Tmp.Core.Comp;
 
 namespace Tmp.Tests.ComponentsTree;
 
@@ -13,7 +13,7 @@ public class Tests
         var tree = new Tree(currentScope, signals);
         var node = tree.CreateNode();
 
-        node.Build(self =>
+        node.Init(self =>
         {
             var signal = self.CreateSignal(0).WithName("signal 1");
             var signal2 = self.CreateSignal(2).WithName("signal 2");
@@ -102,99 +102,39 @@ public class Tests
     public void Components()
     {
         var tree = new Tree();
-        Signal<bool>? signal = null;
-
-        var component = new ComponentFunc(self =>
+        ISignalMut<bool>? cond = null;
+        
+        tree.Build(new ComponentFunc(self =>
         {
-            var cond = self.CreateSignal(false);
-            signal = cond;
+            cond = self.CreateSignal(false);
 
-            self.UseEffect(() =>
-            {
-                Console.WriteLine("hello!");
-            });
-
-            self.OnCleanup(() =>
-            {
-                Console.WriteLine("root unmounted");
-            });
-
-
-            var left = new C2("left");
-            var right = new C2("right");
-            var comp = self.UseMemo<IComponent>(
-                _ => cond.Value ? left : right,
-                left
-            );
-
-            return
-            [
-                new C(comp),
+            // var left = new TestComponent("left");
+            // var right = new TestComponent("right");
+            // var comp = self.UseMemo<IComponent>(
+            //     _ => cond.Value ? left : right,
+            //     left
+            // );
+            
+            return [
                 new ComponentFunc(self =>
                 {
-                    self.UseEffect(() =>
+                    self.OnMount(() =>
                     {
-                        Console.WriteLine("child mounted");
+                        Console.WriteLine("mount!");
                     });
+                    
                     self.OnCleanup(() =>
                     {
-                        Console.WriteLine("child unmounted");
+                        Console.WriteLine("bye!");
                     });
-                    return [];
-                }),
-                new Conditional(cond)
-                {
-                    new ComponentFunc(self =>
-                    {
-                        self.SetScopeName("conditional");
-                        self.OnMount(() => { Console.WriteLine("Hello!"); });
-                        self.OnCleanup(() => { Console.WriteLine("Bye!"); });
-                        return [];
-                    })
-                },
-                
-                new ComponentFunc(self =>
-                {
-                    self.SetScopeName("conditional2");
-                    self.OnMount(() => { Console.WriteLine("Hello2!"); });
-                    self.OnCleanup(() => { Console.WriteLine("Bye2!"); });
+
                     return [];
                 }).If(cond)
             ];
-        });
-        
-        tree.Build(component);
-        Console.WriteLine("built");
-        signal!.Value = true;
-        // signal!.Value = true;
-        // signal!.Value = true;
-        signal!.Value = false;
-        // signal!.Value = true;
-    }
-    
-    private class C2(string text) : Component
-    {
-        protected override IEnumerable<IComponent> Build(Node self)
-        {
-            self.UseEffect(() => Console.WriteLine(text));
-            return [];
-        }
-    }
+        }));
 
-    private class C(Signal<IComponent> comp) : Component
-    {
-        protected override IEnumerable<IComponent> Build(Node self)
-        {
-            self.UseEffect(() =>
-            {
-                var c = comp.Value;
-                self.Untrack(() =>
-                {
-                    self.ReplaceChildren(c);
-                });
-            });
-            
-            return [];
-        }
+        cond!.Value = true;
+        cond!.Value = false;
+        cond!.Value = true;
     }
 }
