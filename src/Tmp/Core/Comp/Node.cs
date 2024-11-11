@@ -6,10 +6,12 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
 {
     private Node? _parent;
     private readonly List<Node> _children = [];
+    private readonly Context _ctx = new();
 
+    private readonly Queue<IScope> _onMountScopes = [];
+    
     private NodeState _state = NodeState.Building;
     private Scope? _scope;
-    private readonly Queue<IScope> _onMountScopes = [];
 
     enum NodeState
     {
@@ -189,6 +191,57 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
     {
         currentScope.Value?.SetName(name);
     }
+
+    public T CreateContext<T>(T value)
+    {
+        _ctx.Create(value);
+        return value;
+    }
+
+    public T UseContext<T>()
+    {
+        return FindInContext<T>();
+    }
+
+    private T FindInContext<T>()
+    {
+        if (_parent == null)
+        {
+            throw new Exception($"Unable to find a context value for {typeof(T)}");
+        }
+
+        if (_parent._ctx.Has<T>())
+        {
+            return _parent._ctx.Get<T>();
+        }
+        
+        return _parent!.FindInContext<T>();
+    }
+    
+    private class Context
+    {
+        private readonly Dictionary<Type, object> _map = new();
+
+        public T Get<T>()
+        {
+            return (T)_map[typeof(T)];
+        }
+
+        public bool Has<T>()
+        {
+            return _map.ContainsKey(typeof(T));
+        }
+    
+        public void Create<T>(T val)
+        {
+            if (val == null)
+            {
+                throw new ArgumentNullException(nameof(val));
+            }
+            
+            _map[typeof(T)] = val;
+        }
+    }
 }
 
 public class Tree
@@ -240,6 +293,10 @@ public interface INodeInit
     void Batch<TArgs>(Action<TArgs> action, TArgs args);
 
     void SetScopeName(string name);
+
+    T CreateContext<T>(T value);
+    
+    T UseContext<T>();
 }
 
 public static class NodeInitEx

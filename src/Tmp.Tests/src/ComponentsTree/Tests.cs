@@ -138,3 +138,68 @@ public class Tests
         cond!.Value = true;
     }
 }
+
+public class ContextTests
+{
+    [Test]
+    public void OnlyParentContextIsUsed()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            var parentVal = self.CreateContext(1);
+            return new ComponentFunc(self =>
+            {
+                var childVal = self.CreateContext(2);
+                var usedVal = self.UseContext<int>();
+                
+                Assert.That(childVal, Is.Not.EqualTo(parentVal));
+                Assert.That(usedVal, Is.EqualTo(parentVal));
+                Assert.Pass();
+                
+                return [];
+            });
+        }));
+        
+        Assert.Fail();
+    }
+    
+    [Test]
+    public void CreateContextReturnsThePassedValue()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            var val = self.CreateContext(1);
+            Assert.That(val, Is.EqualTo(1));
+            Assert.Pass();
+
+            return [];
+        }));
+        
+        Assert.Fail();
+    }
+        
+    [Test]
+    public void UnableToUseCreatedContext()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.CreateContext(1);
+
+            Assert.Throws<Exception>(() =>
+            {
+                self.UseContext<int>();
+            });
+            Assert.Pass();
+
+            return [];
+        }));
+        
+        Assert.Fail();
+    }
+}
