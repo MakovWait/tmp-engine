@@ -164,7 +164,7 @@ public class NodeNameTests
 
         var a = tree.Root.GetNode(new NodePath("/root/a"))!;
         Assert.That(a.Name.Value, Is.EqualTo("a"));
-        a.Name.Value = "b";
+        a.SetName("b");
         Assert.That(a.Name.Value, Is.EqualTo("@b@0"));
     }
     
@@ -228,7 +228,7 @@ public class NodeNameTests
             Children = [
                 new ComponentFunc(self =>
                 {
-                    rename = () => self.Name.Value = "test";
+                    rename = () => self.SetName("test");
                     
                     self.UseEffect(call =>
                     {
@@ -251,6 +251,45 @@ public class NodeNameTests
         
         rename?.Invoke();
         Assert.Fail();
+    }
+    
+    [Test]
+    public void TestNodeRenameDoesNotTriggerUseEffectTwice()
+    {
+        var tree = new Tree();
+        Action? rename = null;
+        Action? check = null;
+
+        var totalCalls = 0;
+        
+        tree.Build(new Component
+        {
+            Name = "root",
+            Children = [
+                new ComponentFunc(self =>
+                {
+                    rename = () => self.SetName("b");
+                    
+                    self.UseEffect(() =>
+                    {
+                        self.Name.Get();
+                        totalCalls += 1;
+                    });
+                    
+                    return [];
+                })
+                {
+                    Name = "a",
+                },
+                new Component()
+                {
+                    Name = "b",
+                }
+            ]
+        });
+        
+        rename?.Invoke();
+        Assert.That(totalCalls, Is.EqualTo(2));
     }
 }
 

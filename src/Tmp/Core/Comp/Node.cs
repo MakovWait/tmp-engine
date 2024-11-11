@@ -18,15 +18,16 @@ public class Node : INodeInit
     private readonly Tree _tree;
     private readonly CurrentScope _currentScope;
     private readonly Signals _signals;
-    
-    public ISignalMut<string> Name { get; }
+    private readonly ISignalMut<string> _name;
+
+    public ISignal<string> Name => _name;
 
     public Node(string initialName, Tree tree, CurrentScope currentScope, Signals signals)
     {
         _tree = tree;
         _currentScope = currentScope;
         _signals = signals;
-        Name = signals.Create(initialName);
+        _name = signals.Create(initialName);
     }
 
     enum NodeState
@@ -135,13 +136,6 @@ public class Node : INodeInit
             new Computation<Unit>(prev =>
             {
                 init(this);
-                
-                this.UseEffect(() =>
-                {
-                    Name.Get();
-                    _parent?.ValidateChildName(this);
-                });
-                
                 return prev;
             }, new Unit()),
             _currentScope
@@ -158,7 +152,7 @@ public class Node : INodeInit
         var name = child.Name.UntrackedValue;
         var unique = _children.NameIsUnique(child);
         if (unique) return;
-        child.Name.Value = $"@{name}@{_children.IndexOf(child)}";
+        child._name.Value = $"@{name}@{_children.IndexOf(child)}";
     }
     
     private void RegisterScope(IScope scope)
@@ -291,6 +285,16 @@ public class Node : INodeInit
     public void OnLate<T>(Action<T> action)
     {
         _lateCallbacks.Add(action);
+    }
+
+    public void SetName(string value)
+    {
+        Batch(args =>
+        {
+            var (self, val) = args;
+            self._name.Value = val;
+            self._parent?.ValidateChildName(self);
+        }, (this, value));
     }
 
     private T FindInContext<T>()
@@ -508,7 +512,7 @@ public class Tree
 
 public interface INodeInit
 {
-    ISignalMut<string> Name { get; }
+    ISignal<string> Name { get; }
     
     void UseEffect(IComputation computation);
 
@@ -535,6 +539,8 @@ public interface INodeInit
     void On<T>(Action<T> action);
     
     void OnLate<T>(Action<T> action);
+
+    void SetName(string value);
 }
 
 public static class NodeInitEx
