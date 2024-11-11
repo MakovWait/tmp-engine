@@ -79,7 +79,7 @@ public class Node(Tree tree, CurrentScope currentScope, Signals signals) : INode
         {
             NoTrack = true
         };
-        currentScope.Value?.Bind(_scope);
+        // currentScope.Value?.Bind(_scope);
         _scope.Trigger();
     }
     
