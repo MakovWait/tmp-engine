@@ -258,7 +258,6 @@ public class NodeNameTests
     {
         var tree = new Tree();
         Action? rename = null;
-        Action? check = null;
 
         var totalCalls = 0;
         
