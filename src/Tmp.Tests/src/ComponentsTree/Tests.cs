@@ -377,6 +377,7 @@ public class UseMemoTests
         }));
 
         Assert.That(useMemoCalls, Is.EqualTo(1));
+        tree.FlushDeferredQueue();
         counter!.Value = 1;
         tree.FlushDeferredQueue();
         Assert.That(useMemoCalls, Is.EqualTo(2));
@@ -493,6 +494,7 @@ public class NodeNameTests
             ]
         });
         
+        tree.FlushDeferredQueue();
         rename?.Invoke();
         tree.FlushDeferredQueue();
         Assert.Fail();
@@ -532,9 +534,94 @@ public class NodeNameTests
             ]
         });
         
+        tree.FlushDeferredQueue();
         rename?.Invoke();
         tree.FlushDeferredQueue();
         Assert.That(totalCalls, Is.EqualTo(2));
+    }
+}
+
+public class UseSignalTests
+{
+    [Test]
+    public void SignalDoNotEmitIfValueIsNotChanged()
+    {
+        var tree = new Tree();
+
+        ISignalMut<int>? signal = null;
+        tree.Build(new ComponentFunc(self =>
+        {
+            signal = self.UseSignal(1);
+            
+            self.UseComputed(calls =>
+            {
+                signal.Track();
+                if (calls == 2)
+                {
+                    Assert.Fail();
+                }
+                return calls + 1;
+            }, 1);
+            
+            return [];
+        }));
+
+        signal!.Value = 1;
+        Assert.Pass();
+    }
+    
+    [Test]
+    public void SignalEmitsIfValueIsNotChangedButEqualsIsFalse()
+    {
+        var tree = new Tree();
+
+        ISignalMut<int>? signal = null;
+        tree.Build(new ComponentFunc(self =>
+        {
+            signal = self.UseSignal(1).WithEquals(new SignalValueEquals.Const<int>(false));
+            
+            self.UseComputed(calls =>
+            {
+                signal.Track();
+                if (calls == 2)
+                {
+                    Assert.Pass();
+                }
+                return calls + 1;
+            }, 1);
+            
+            return [];
+        }));
+
+        signal!.Value = 1;
+        Assert.Fail();
+    }
+    
+    [Test]
+    public void SignalEmitsIfValueIsNotChangedButEqualsIsNull()
+    {
+        var tree = new Tree();
+
+        ISignalMut<int>? signal = null;
+        tree.Build(new ComponentFunc(self =>
+        {
+            signal = self.UseSignal(1, equals: null);
+            
+            self.UseComputed(calls =>
+            {
+                signal.Track();
+                if (calls == 2)
+                {
+                    Assert.Pass();
+                }
+                return calls + 1;
+            }, 1);
+            
+            return [];
+        }));
+
+        signal!.Value = 1;
+        Assert.Fail();
     }
 }
 

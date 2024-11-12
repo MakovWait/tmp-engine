@@ -11,10 +11,12 @@ internal class Signal<T> : ISignalMut<T>
     private readonly InnerSignal _innerSignal;
     private string? _name;
     private readonly ISignalScope _scope;
+    private ISignalValueEquals<T>? _equals;
 
-    public Signal(T initial, ISignalScope scope, ISignalConfig config, ISignalBatch batch)
+    public Signal(T initial, ISignalScope scope, ISignalConfig config, ISignalBatch batch, ISignalValueEquals<T>? equals)
     {
         _scope = scope;
+        _equals = equals;
         _value = initial;
         _innerSignal = new InnerSignal(this, config, batch);
     }
@@ -31,6 +33,11 @@ internal class Signal<T> : ISignalMut<T>
         set => _value = value;
     }
 
+    public void SetValueEquals(ISignalValueEquals<T>? equals)
+    {
+        _equals = equals;
+    }
+
     public void SetDebugName(string name)
     {
         _name = name;
@@ -44,6 +51,7 @@ internal class Signal<T> : ISignalMut<T>
 
     private void Set(T value)
     {
+        if (_equals?.Equals(_value, value) ?? false) return;
         _value = value;
         _innerSignal.Notify();
     }
@@ -77,6 +85,45 @@ internal class Signal<T> : ISignalMut<T>
     }
 }
 
+public interface ISignalValueEquals<in T> {
+    bool Equals(T prev, T next);
+}
+
+public static class SignalValueEquals
+{
+    public class ObjEquals<TValue> : ISignalValueEquals<TValue> where TValue : class
+    {
+        public bool Equals(TValue prev, TValue next)
+        {
+            return prev.Equals(next);
+        }
+    }
+    
+    public class ObjRef<TValue> : ISignalValueEquals<TValue> where TValue : class
+    {
+        public bool Equals(TValue prev, TValue next)
+        {
+            return prev == next;
+        }
+    }
+    
+    public class Equitable<TValue> : ISignalValueEquals<TValue> where TValue : IEquatable<TValue>
+    {
+        public bool Equals(TValue prev, TValue next)
+        {
+            return prev.Equals(next);
+        }
+    }
+    
+    public class Const<TValue>(bool result) : ISignalValueEquals<TValue>
+    {
+        public bool Equals(TValue prev, TValue next)
+        {
+            return result;
+        }
+    }
+}
+
 public interface ISignal
 {
     void SetDebugName(string name);
@@ -87,6 +134,8 @@ public interface ISignal<out T> : ISignal
     public T Value { get; }
     
     public T UntrackedValue { get; }
+
+    void SetValueEquals(ISignalValueEquals<T>? equals);
 }
 
 public interface ISignalMut<T> : ISignal<T>
@@ -101,6 +150,12 @@ public static class SignalEx
     public static TSelf WithName<TSelf>(this TSelf self, string name) where TSelf : ISignal
     {
         self.SetDebugName(name);
+        return self;
+    }
+    
+    public static TSelf WithEquals<T, TSelf>(this TSelf self, ISignalValueEquals<T>? equals) where TSelf : ISignal<T>
+    {
+        self.SetValueEquals(equals);
         return self;
     }
     
@@ -133,9 +188,9 @@ public class Signals(CurrentScope scope, SignalBatch targetsBatchedQueue)
         set => SetBatched(value);
     }
 
-    public ISignalMut<T> Create<T>(T initial)
+    public ISignalMut<T> Create<T>(T initial, ISignalValueEquals<T>? equals)
     {
-        return new Signal<T>(initial, _currentSignalScope, _config, targetsBatchedQueue);
+        return new Signal<T>(initial, _currentSignalScope, _config, targetsBatchedQueue, equals);
     }
 
     public void FlushBatches()

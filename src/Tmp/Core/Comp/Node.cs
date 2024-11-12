@@ -25,7 +25,7 @@ public class Node : INodeInit
         _tree = tree;
         _currentScope = currentScope;
         _signals = signals;
-        _name = signals.Create(initialName);
+        _name = signals.Create(initialName, new SignalValueEquals.Equitable<string>());
     }
 
     enum NodeState
@@ -155,9 +155,9 @@ public class Node : INodeInit
         _currentScope.Value?.Bind(scope);
     }
 
-    public ISignalMut<T> UseSignal<T>(T initial)
+    public ISignalMut<T> UseSignal<T>(T initial, ISignalValueEquals<T>? equals)
     {
-        return _signals.Create(initial);
+        return _signals.Create(initial, equals);
     }
 
     public void OnCleanup(ICleanup cleanup)
@@ -191,9 +191,9 @@ public class Node : INodeInit
         scope.Trigger();
     }
 
-    public ISignal<T> UseMemo<T>(Func<T, T> fn, T initial)
+    public ISignal<T> UseMemo<T>(Func<T, T> fn, T initial, ISignalValueEquals<T>? equals)
     {
-        var signal = UseSignal(initial);
+        var signal = UseSignal(initial, equals);
         var memoScope = new Scope(
             new BatchedComputation(
                 this, 
@@ -609,9 +609,9 @@ public interface INodeInit
     
     void UseComputed(IComputation computation);
 
-    ISignal<T> UseMemo<T>(Func<T, T> fn, T initial);
+    ISignal<T> UseMemo<T>(Func<T, T> fn, T initial, ISignalValueEquals<T>? equals);
 
-    ISignalMut<T> UseSignal<T>(T initial);
+    ISignalMut<T> UseSignal<T>(T initial, ISignalValueEquals<T>? equals);
 
     void OnCleanup(ICleanup cleanup);
 
@@ -636,6 +636,32 @@ public interface INodeInit
     void SetName(string value);
 
     void CallDeferred<T>(Action<T> action, T args);
+}
+
+public static class NodeInitExUseEquitableSignal
+{
+    public static ISignalMut<T> UseSignal<T>(this INodeInit self, T initial) where T : IEquatable<T>
+    {
+        return self.UseSignal(initial, new SignalValueEquals.Equitable<T>());
+    }
+    
+    public static ISignal<T> UseMemo<T>(this INodeInit self, Func<T, T> fn, T initial) where T : IEquatable<T>
+    {
+        return self.UseMemo(fn, initial, new SignalValueEquals.Equitable<T>());
+    }
+}
+
+public static class NodeInitExUseObjSignal
+{
+    public static ISignal<T> UseMemo<T>(this INodeInit self, Func<T, T> fn, T initial) where T : class
+    {
+        return self.UseMemo(fn, initial, new SignalValueEquals.ObjRef<T>());
+    }
+    
+    public static ISignalMut<T> UseSignal<T>(this INodeInit self, T initial) where T : class
+    {
+        return self.UseSignal(initial, new SignalValueEquals.ObjRef<T>());
+    }
 }
 
 public static class NodeInitEx
