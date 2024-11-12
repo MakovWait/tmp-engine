@@ -141,6 +141,198 @@ public class Tests
     }
 }
 
+public class UseEffectTests
+{
+    [Test]
+    // so it is not called without tree::FlushQueue
+    public void UseEffectIsDeferred()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.UseEffect(() =>
+            {
+                Assert.Fail();
+            });
+            
+            return [];
+        }));
+        
+        Assert.Pass();
+    }
+    
+    [Test]
+    // so it is called first time after tree::FlushQueue
+    public void UseEffectIsDeferred2()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.UseEffect(() =>
+            {
+                Assert.Pass();
+            });
+            
+            return [];
+        }));
+        
+        tree.FlushDeferredQueue();
+        
+        Assert.Fail();
+    }
+    
+    [Test]
+    // so it is not triggered without tree::FlushQueue
+    public void UseEffectIsDeferred3()
+    {
+        var tree = new Tree();
+        
+        ISignalMut<int>? signal = null;
+        tree.Build(new ComponentFunc(self =>
+        {
+            signal = self.UseSignal(0);
+            
+            self.UseEffect(call =>
+            {
+                signal.Track();
+                if (call == 2)
+                {
+                    Assert.Fail();
+                }
+                return call + 1;
+            }, 1);
+            
+            return [];
+        }));
+        
+        tree.FlushDeferredQueue();
+        signal!.Value = 2;
+        Assert.Pass();
+    }
+    
+    [Test]
+    // so it is triggered after tree::FlushQueue
+    public void UseEffectIsDeferred4()
+    {
+        var tree = new Tree();
+        
+        ISignalMut<int>? signal = null;
+        tree.Build(new ComponentFunc(self =>
+        {
+            signal = self.UseSignal(0);
+            
+            self.UseEffect(call =>
+            {
+                signal.Track();
+                if (call == 2)
+                {
+                    Assert.Pass();
+                }
+                return call + 1;
+            }, 1);
+            
+            return [];
+        }));
+        
+        tree.FlushDeferredQueue();
+        signal!.Value = 2;
+        tree.FlushDeferredQueue();
+        Assert.Fail();
+    }
+}
+
+public class UseComputedTests
+{
+    [Test]
+    public void ComputedIsCalledAsSoonCreated()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.UseComputed(() =>
+            {
+                Assert.Pass();
+            });
+            
+            return [];
+        }));
+        
+        Assert.Fail();
+    }
+    
+    [Test]
+    public void ComputedIsCalledAsSoonTriggered()
+    {
+        var tree = new Tree();
+        
+        ISignalMut<int>? signal = null;
+        tree.Build(new ComponentFunc(self =>
+        {
+            signal = self.UseSignal(0);
+            
+            self.UseComputed(calls =>
+            {
+                signal.Track();
+
+                if (calls == 2)
+                {
+                    Assert.Pass();
+                }
+                
+                return calls + 1;
+            }, 1);
+            
+            return [];
+        }));
+        
+        signal!.Value = 2;
+        Assert.Fail();
+    }
+}
+
+public class CallDeferredTests
+{
+    [Test]
+    public void CallDeferredIsNotCalled()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.CallDeferred(_ =>
+            {
+                Assert.Fail();
+            }, 0);
+            
+            return [];
+        }));
+        
+        Assert.Pass();
+    }
+    
+    [Test]
+    public void CallDeferredIsCalled()
+    {
+        var tree = new Tree();
+        
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.CallDeferred(_ =>
+            {
+                Assert.Pass();
+            }, 0);
+            
+            return [];
+        }));
+        
+        tree.FlushDeferredQueue();
+        Assert.Fail();
+    }
+}
+
 public class UseMemoTests
 {
     [Test]
@@ -186,6 +378,7 @@ public class UseMemoTests
 
         Assert.That(useMemoCalls, Is.EqualTo(1));
         counter!.Value = 1;
+        tree.FlushDeferredQueue();
         Assert.That(useMemoCalls, Is.EqualTo(2));
         Assert.That(useEffectCalls, Is.EqualTo(2));
     }
@@ -301,6 +494,7 @@ public class NodeNameTests
         });
         
         rename?.Invoke();
+        tree.FlushDeferredQueue();
         Assert.Fail();
     }
     
@@ -339,6 +533,7 @@ public class NodeNameTests
         });
         
         rename?.Invoke();
+        tree.FlushDeferredQueue();
         Assert.That(totalCalls, Is.EqualTo(2));
     }
 }

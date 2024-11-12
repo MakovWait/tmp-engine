@@ -10,8 +10,6 @@ public class Node : INodeInit
     private readonly Children _children = new();
     private readonly Callbacks _callbacks = new();
     private readonly Callbacks _lateCallbacks = new();
-
-    private readonly Queue<IScope> _onMountScopes = [];
     
     private NodeState _state = NodeState.Building;
     private Scope? _scope;
@@ -41,10 +39,6 @@ public class Node : INodeInit
     public void Mount()
     {
         _state = NodeState.Mounted;
-        while (_onMountScopes.Count > 0)
-        {
-            _onMountScopes.Dequeue().Trigger();
-        }
         _children.Mount();
     }
 
@@ -133,12 +127,13 @@ public class Node : INodeInit
     public void Init(Action<Node> init)
     {
         _scope = new Scope(
-            new Computation<Unit>(prev =>
+            new Computation<NoArgs>(prev =>
             {
                 init(this);
                 return prev;
-            }, new Unit()),
-            _currentScope
+            }, new NoArgs()),
+            _currentScope,
+            _tree
         )
         {
             NoTrack = true
@@ -179,17 +174,21 @@ public class Node : INodeInit
     {
         var effectScope = new Scope(
             new BatchedComputation(this, computation),
-            _currentScope
-        );
+            _currentScope,
+            _tree
+        )
+        {
+            Deferred = true
+        };
+        _tree.Enqueue(effectScope);
         RegisterScope(effectScope);
-        if (_state == NodeState.Building)
-        {
-            _onMountScopes.Enqueue(effectScope);
-        }
-        else
-        {
-            effectScope.Trigger();
-        }
+    }
+
+    public void UseComputed(IComputation computation)
+    {
+        var scope = new Scope(computation, _currentScope, _tree);
+        RegisterScope(scope);
+        scope.Trigger();
     }
 
     public ISignal<T> UseMemo<T>(Func<T, T> fn, T initial)
@@ -205,7 +204,8 @@ public class Node : INodeInit
                     return next;
                 }, initial)
             ),
-            _currentScope
+            _currentScope,
+            _tree
         );
         memoScope.Trigger();
         RegisterScope(memoScope);
@@ -295,6 +295,11 @@ public class Node : INodeInit
             self._name.Value = val;
             self._parent?.ValidateChildName(self);
         }, (this, value));
+    }
+
+    public void CallDeferred<T>(Action<T> action, T args)
+    {
+        _tree.CallDeferred(action, args);
     }
 
     private T FindInContext<T>()
@@ -465,10 +470,49 @@ public sealed class NodePath(string path) : IEquatable<string>
     private string AsString => path;
 }
 
-public class Tree
+public interface IDeferredAction
+{
+    void Invoke();
+}
+
+public class DeferredActionWithArgs<T>(Action<T> action, T args) : IDeferredAction
+{
+    public void Invoke()
+    {
+        action(args);
+    }
+}
+
+public class DeferredQueue : IDeferredQueue
+{
+    private readonly List<IDeferredAction> _actions = [];
+    
+    public void Enqueue(IDeferredAction action)
+    {
+        if (_actions.Contains(action)) return;
+        _actions.Add(action);
+    }
+
+    public void Flush()
+    {
+        foreach (var action in _actions)
+        {
+            action.Invoke();
+        }
+        _actions.Clear();
+    }
+}
+
+public interface IDeferredQueue
+{
+    public void Enqueue(IDeferredAction deferredAction);
+}
+
+public class Tree : IDeferredQueue
 {
     private readonly CurrentScope _currentScope;
     private readonly Signals _signals;
+    private readonly TreeDeferredQueue _deferredQueue = new();
     private Node? _root;
 
     internal Node Root => _root!;
@@ -504,9 +548,56 @@ public class Tree
         _root.Mount();
     }
 
+    public void FlushDeferredQueue()
+    {
+        _deferredQueue.Flush();
+    }
+
+    public void Enqueue(IDeferredAction action)
+    {
+        _deferredQueue.Enqueue(action);
+    }
+    
+    public void CallDeferred<T>(Action<T> action, T args)
+    {
+        // TODO pool
+        Enqueue(new DeferredActionWithArgs<T>(action, args));
+    }
+
     internal Node CreateNode(string name)
     {
         return new Node(name, this, _currentScope, _signals);
+    }
+
+    private class TreeDeferredQueue
+    {
+        private readonly Queue<DeferredQueue> _buffer = new();
+        private DeferredQueue _current;
+
+        public TreeDeferredQueue()
+        {
+            _current = new DeferredQueue();
+            _buffer.Enqueue(_current);
+            _buffer.Enqueue(new DeferredQueue());
+        }
+
+        public void Enqueue(IDeferredAction action)
+        {
+            _current.Enqueue(action);
+        }
+
+        private void ChangeBuffer()
+        {
+            _current = _buffer.Dequeue();
+            _buffer.Enqueue(_current);
+        }
+        
+        public void Flush()
+        {
+            var bufferToFlush = _current;
+            ChangeBuffer();
+            bufferToFlush.Flush();
+        }
     }
 }
 
@@ -515,6 +606,8 @@ public interface INodeInit
     ISignal<string> Name { get; }
     
     void UseEffect(IComputation computation);
+    
+    void UseComputed(IComputation computation);
 
     ISignal<T> UseMemo<T>(Func<T, T> fn, T initial);
 
@@ -541,6 +634,8 @@ public interface INodeInit
     void OnLate<T>(Action<T> action);
 
     void SetName(string value);
+
+    void CallDeferred<T>(Action<T> action, T args);
 }
 
 public static class NodeInitEx
@@ -556,7 +651,21 @@ public static class NodeInitEx
         {
             effect();
             return prev;
-        }, new Unit());
+        }, new NoArgs());
+    }
+    
+    public static void UseComputed<T>(this INodeInit self, Func<T, T> effect, T initial)
+    {
+        self.UseComputed(new Computation<T>(effect, initial));
+    }
+    
+    public static void UseComputed(this INodeInit self, Action effect)
+    {
+        self.UseComputed(prev =>
+        {
+            effect();
+            return prev;
+        }, new NoArgs());
     }
     
     public static void OnCleanup(this INodeInit self, Action cleanup)

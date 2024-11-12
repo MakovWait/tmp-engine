@@ -3,7 +3,11 @@ using System.Diagnostics;
 namespace Tmp.Core.Comp;
 
 [DebuggerDisplay("Name = {_name}")]
-public class Scope(IComputation computation, CurrentScope scope) : IScope, ISignalTarget
+public class Scope(
+    IComputation computation, 
+    CurrentScope scope,
+    IDeferredQueue deferredQueue
+) : IScope, ISignalTarget, IDeferredAction
 {
     private string? _name;
     private readonly List<IScope> _children = [];
@@ -11,6 +15,8 @@ public class Scope(IComputation computation, CurrentScope scope) : IScope, ISign
     private readonly List<IObservableSignal> _signals = [];
 
     public bool NoTrack { get; set; } = false;
+    
+    public bool Deferred { get; set; } = false;
 
     public string? Name { get; set; }
 
@@ -43,6 +49,18 @@ public class Scope(IComputation computation, CurrentScope scope) : IScope, ISign
     }
 
     void ISignalTarget.Invoke()
+    {
+        if (Deferred)
+        {
+            deferredQueue.Enqueue(this);
+        }
+        else
+        {
+            Trigger();
+        }
+    }
+    
+    void IDeferredAction.Invoke()
     {
         Trigger();
     }
@@ -112,6 +130,8 @@ public interface IScope
 {
     public bool NoTrack { get; set; }
     
+    public bool Deferred { get; set; }
+    
     public string? Name { get; set; }
 
     void Bind(IScope child);
@@ -148,4 +168,4 @@ public class BatchedComputation(Node batchSource, IComputation origin) : IComput
     }
 }
 
-public readonly struct Unit;
+public readonly struct NoArgs;
