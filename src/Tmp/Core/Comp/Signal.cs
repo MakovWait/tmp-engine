@@ -114,6 +114,11 @@ public static class SignalEx
     {
         return self.Value;
     }
+    
+    public static void Track<T>(this ISignal<T> self)
+    {
+        self.Get();
+    }
 }
 
 public class Signals(CurrentScope scope, SignalBatch targetsBatchedQueue)

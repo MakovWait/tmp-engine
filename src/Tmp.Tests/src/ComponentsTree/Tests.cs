@@ -165,9 +165,9 @@ public class UseMemoTests
             
             self.UseEffect(call =>
             {
-                doubleCounter.Get();
-                doubleCounter.Get();
-                doubleCounter.Get();
+                doubleCounter.Track();
+                doubleCounter.Track();
+                doubleCounter.Track();
                 var doubleValue = doubleCounter.Value; 
                 if (call == 1)
                 {
@@ -322,7 +322,7 @@ public class NodeNameTests
                     
                     self.UseEffect(() =>
                     {
-                        self.Name.Get();
+                        self.Name.Track();
                         totalCalls += 1;
                     });
                     
