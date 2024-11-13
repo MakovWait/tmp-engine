@@ -1,5 +1,5 @@
 using Raylib_cs;
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 using Tmp.Math;
 
 namespace Tmp.Core;
@@ -24,7 +24,7 @@ public class Input(bool enabled)
         _enabled = enabled;
     }
     
-    internal void Propagate(Node subTree)
+    internal void Propagate(INodeInit subTree)
     {
         if (!_enabled) return;
         var keyPressed = Raylib.GetKeyPressed();

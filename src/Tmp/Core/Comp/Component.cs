@@ -22,13 +22,13 @@ public class Component : IComponent, IEnumerable<IComponent>
         
         _self.Init(_ =>
         {
-            CreateChildren(Init());
+            CreateChildren(Init(_self));
         });
         
         return _self;
     }
 
-    protected virtual Components Init()
+    protected virtual Components Init(INodeInit self)
     {
         return Children;
     }
@@ -77,11 +77,16 @@ public class Component : IComponent, IEnumerable<IComponent>
     }
 }
 
-public class ComponentFunc(Func<INodeInit, Components> init) : Component
+public class ComponentFunc(Func<INodeInit, Components, Components> init) : Component
 {
-    protected override Components Init()
+    public ComponentFunc(Func<INodeInit, Components> init): this((self, _) => init(self))
     {
-        return init(Self);
+        
+    }
+    
+    protected override Components Init(INodeInit self)
+    {
+        return init(self, Children);
     }
 }
 

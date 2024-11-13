@@ -536,6 +536,16 @@ public class Tree : IDeferredQueue
         _root!.Call(args);
     }
     
+    public void Call<T>() where T : new()
+    {
+        _root!.Call(new T());
+    }
+
+    public void Free()
+    {
+        _root!.Free();
+    }
+    
     public void Build(IComponent component)
     {
         _root = component.Build(this, null);

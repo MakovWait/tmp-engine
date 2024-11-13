@@ -1,6 +1,6 @@
 using Raylib_cs;
 using Tmp.Core;
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 using Tmp.Math;
 using Tmp.Render;
 using Tmp.Window.Components;
@@ -46,7 +46,7 @@ public class WindowRl(AppViewport viewport) : IWindow, IAppViewportTarget
         Raylib.EndDrawing();
     }
 
-    public void BindTo(Component.Self self)
+    public void BindTo(INodeInit self)
     {
         viewport.BindTo(self);
     }

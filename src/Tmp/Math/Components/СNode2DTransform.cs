@@ -1,15 +1,19 @@
-﻿using Tmp.Core;
-using Tmp.Core.Redot;
+﻿using Tmp.Core.Comp;
 
 namespace Tmp.Math.Components;
 
-public class CNode2DTransformRoot() : Component(self =>
+public class CNode2DTransformRoot : Component
 {
-    self.CreateContext(new СNode2DTransform
+    protected override Core.Comp.Components Init(INodeInit self)
     {
-        Local = Transform2D.Identity
-    });
-});
+        self.CreateContext(new СNode2DTransform
+        {
+            Local = Transform2D.Identity
+        });
+
+        return Children;
+    }
+}
 
 public sealed class СNode2DTransform : INode2DTransform
 {
@@ -303,35 +307,23 @@ internal interface INode2DTransform
 
 public static class NodeTransformExtensions
 {
-    public static IContextValue<СNode2DTransform> UseParentTransform2D(this Component.Self self)
+    public static СNode2DTransform UseParentTransform2D(this INodeInit self)
     {
-        return self.Use<СNode2DTransform>();
+        return self.UseContext<СNode2DTransform>();
     }
-
-    public static IRef<СNode2DTransform> UseTransform2D(this Component.Self self, Transform2D? initial = null)
+    
+    public static СNode2DTransform UseTransform2D(this INodeInit self, Transform2D? initial = null)
     {
         var parentTransform = self.UseParentTransform2D();
-        var transformRef = new Ref<СNode2DTransform>(
-            new СNode2DTransform { Local = initial ?? Transform2D.Identity }
-        );
-        var transformCtx = self.CreateContext(transformRef.Get());
-
-        self.UseEffect(() =>
+        var transform = new СNode2DTransform { Local = initial ?? Transform2D.Identity };
+        var transformCtx = self.CreateContext(transform);
+        
+        ((INode2DTransform)transformCtx).AddTo(parentTransform);
+        self.OnCleanup(() =>
         {
-            ((INode2DTransform)transformCtx.Get()).AddTo(parentTransform.Get());
-            return () => ((INode2DTransform)transformCtx.Get()).ClearParent();
-        }, [parentTransform]);
-
-        return transformRef;
-    }
-
-    public static Vector2 Position(this IScalar<СNode2DTransform> self)
-    {
-        return self.Get().Position;
-    }
-
-    public static Vector2 GlobalPosition(this IScalar<СNode2DTransform> self)
-    {
-        return self.Get().GlobalPosition;
+            ((INode2DTransform)transformCtx).ClearParent();
+        });
+        
+        return transform;
     }
 }

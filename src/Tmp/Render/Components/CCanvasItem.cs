@@ -1,27 +1,23 @@
-﻿using Tmp.Core.Redot;
+﻿using Tmp.Core.Comp;
 using Tmp.Math;
 using Tmp.Math.Components;
 
 namespace Tmp.Render.Components;
 
-public class CCanvasItem(CCanvasItem.Props props) : Component(self =>
+public class CCanvasItem : Component
 {
-    var transform = self.UseTransform2D(props.Transform2D);
-    var canvasItem = self.UseCanvasItem(transform);
-    canvasItem.OnDraw(ctx =>
+    public Transform2D? Transform2D { get; init; } = null;
+
+    public Action<IDrawContext>? OnDraw { get; init; } = null;
+    
+    protected override Core.Comp.Components Init(INodeInit self)
     {
-        props.OnDraw?.Invoke(ctx);
-    });
-})
-{
-    public readonly struct Props
-    {
-        public Props()
+        var transform = self.UseTransform2D(Transform2D);
+        var canvasItem = self.UseCanvasItem(transform);
+        canvasItem.OnDraw(ctx =>
         {
-        }
-
-        public Transform2D? Transform2D { get; init; } = null;
-
-        public Action<IDrawContext>? OnDraw { get; init; } = null;
+            OnDraw?.Invoke(ctx);
+        });
+        return Children;
     }
 }

@@ -1,4 +1,4 @@
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 
 namespace Tmp.Window;
 
@@ -6,5 +6,5 @@ public interface IWindow
 {
     void Draw();
 
-    void BindTo(Component.Self self);
+    void BindTo(INodeInit self);
 }

@@ -1,5 +1,5 @@
 using Raylib_cs;
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 using Tmp.Core.Resource;
 
 namespace Tmp;
@@ -23,10 +23,10 @@ public readonly record struct PreDraw;
 public readonly record struct Draw;
 public readonly record struct PostDraw;
 
-public sealed class App : IRunnableApp, IResources, ITreeBuilder
+public sealed class App : IRunnableApp, IResources
 {
     private readonly Resources _resources = new();
-    private readonly Tree _tree = new(isReady: false);
+    private readonly Tree _tree = new();
     private readonly Component _root;
     private IAppRunner _runner = new IAppRunner.Default();
     
@@ -49,8 +49,7 @@ public sealed class App : IRunnableApp, IResources, ITreeBuilder
 
     public void Start()
     {
-        AttachToRoot(_root);
-        _tree.Build();
+        _tree.Build(_root);
     }
 
     public void Update()
@@ -63,7 +62,7 @@ public sealed class App : IRunnableApp, IResources, ITreeBuilder
         _tree.Call<Draw>();
         _tree.Call<PostDraw>();
         
-        _tree.Update();
+        _tree.FlushDeferredQueue();
     }
 
     public void Close()
@@ -99,21 +98,6 @@ public sealed class App : IRunnableApp, IResources, ITreeBuilder
     IDisposable IResources.OnSet<T>(Action<T> callback)
     {
         return _resources.OnSet(callback);
-    }
-
-    public void SetSingleton<T>(T singleton)
-    {
-        _tree.SetSingleton(singleton);
-    }
-
-    public void DecorateRootUp(IComponent component)
-    {
-        _tree.QueueBuild(tree => tree.DecorateRootUp(component));
-    }
-
-    public void AttachToRoot(IComponent component)
-    {
-        _tree.QueueBuild(tree => tree.AttachToRoot(component));
     }
 }
 

@@ -1,5 +1,5 @@
 ﻿using Tmp.Core;
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 using Tmp.Math;
 using Tmp.Render;
 
@@ -38,13 +38,13 @@ public class AppViewport(SubViewport viewport, Input input)
         );
     }
 
-    public void BindTo(Component.Self self)
+    public void BindTo(INodeInit self)
     {
         viewport.BindTo(self);
         
         self.On<PreUpdate>(_ =>
         {
-            input.Propagate(self.Unchecked);
+            input.Propagate(self);
         });
     }
 }

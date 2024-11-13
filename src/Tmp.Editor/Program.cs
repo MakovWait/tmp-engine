@@ -3,12 +3,13 @@ using Raylib_cs;
 using rlImGui_cs;
 using Tmp;
 using Tmp.Core;
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 using Tmp.Math;
 using Tmp.Project;
 using Tmp.Render;
 using Tmp.Window;
 using Tmp.Window.Components;
+using Component = Tmp.Core.Redot.Component;
 
 var app = new App(new CWindowsImGui
 {
@@ -16,12 +17,14 @@ var app = new App(new CWindowsImGui
 });
 await app.Run();
 
-public class CWindowsImGui() : Component(self =>
+public class CWindowsImGui() : ComponentFunc((self, children) =>
 {
     var windows = new WindowsImGui();
     self.CreateContext<IWindows>(windows);
     
-    self.UseCleanup(() => windows.Close());
+    self.OnCleanup(() => windows.Close());
+
+    return children;
 });
 
 internal class WindowImGui(AppViewport viewport) : IWindow, IAppViewportTarget
@@ -52,7 +55,7 @@ internal class WindowImGui(AppViewport viewport) : IWindow, IAppViewportTarget
         Raylib.EndDrawing();
     }
 
-    public void BindTo(Component.Self self)
+    public void BindTo(INodeInit self)
     {
         viewport.BindTo(self);
     }

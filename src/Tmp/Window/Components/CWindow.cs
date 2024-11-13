@@ -1,5 +1,5 @@
 using Tmp.Core;
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 using Tmp.Math;
 using Tmp.Window.Rl;
 
@@ -12,39 +12,29 @@ public readonly struct WindowSettings
     public int? TargetFps { get; init; }
 }
 
-public class CWindow(WindowSettings settings) : Component(self =>
+public class CWindow(WindowSettings settings) : ComponentFunc((self, children) =>
 {
-    var windows = self.Use<IWindows>();
+    var windows = self.UseContext<IWindows>();
 
-    self.UseEffect(() =>
-    {
-        var input = new Input(true);
-        windows.Get().Start(settings, input);
-        
-        self.RuntimeRef.DecorateDown(new _CWindowInner(windows.Get().Main, input)
-        {
-            Children = self.Children
-        });
-
-        return () => throw new NotSupportedException();
-    }, [windows]);
-
-    return [];
-});
-
-internal class _CWindowInner(IWindow window, Input input) : Component(self =>
-{
+    var input = new Input(true);
+    windows.Start(settings, input);
+    var window = windows.Main;
+    
     window.BindTo(self);
 
     self.CreateContext(input);
     
-    self.On<Draw>(() => window.Draw());
+    self.On<Draw>(_ => window.Draw());
+
+    return children;
 });
 
-public class CWindowsRl() : Component(self =>
+public class CWindowsRl() : ComponentFunc((self, children) =>
 {
     var windows = new WindowsRl();
     self.CreateContext<IWindows>(windows);
     
-    self.UseCleanup(() => windows.Close());
+    self.OnCleanup(() => windows.Close());
+
+    return children;
 });

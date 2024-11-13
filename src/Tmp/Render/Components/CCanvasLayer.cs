@@ -1,24 +1,26 @@
-﻿using Tmp.Core.Redot;
+﻿using Tmp.Core.Comp;
 using Tmp.Math;
 using Tmp.Math.Components;
 using Tmp.Render.Util;
 
 namespace Tmp.Render.Components;
 
-public class CCanvasLayer() : Component(self =>
+public class CCanvasLayer : Component
 {
-    var layer = new CanvasLayer();
-    
-    self.CreateContext(new СNode2DTransform
+    protected override Core.Comp.Components Init(INodeInit self)
     {
-        Local = Transform2D.Identity
-    });
-    self.CreateContext<ICanvasItemContainer>(layer);
-    
-    var container = self.Use<ICanvasLayerContainer>();
-    self.UseEffect(() =>
-    {
-        container.Get().Add(layer);
-        return () => container.Get().Remove(layer);
-    }, [container]);
-});
+        var layer = new CanvasLayer();
+
+        self.CreateContext(new СNode2DTransform
+        {
+            Local = Transform2D.Identity
+        });
+        self.CreateContext<ICanvasItemContainer>(layer);
+
+        var container = self.UseContext<ICanvasLayerContainer>();
+        container.Add(layer);
+        self.OnCleanup(() => container.Remove(layer));
+
+        return Children;
+    }
+};

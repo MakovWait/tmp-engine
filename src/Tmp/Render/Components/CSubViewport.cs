@@ -1,14 +1,15 @@
+using Tmp.Asset.BuiltIn.Texture;
+using Tmp.Core.Comp;
 using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Math.Components;
 using Tmp.Render.Util;
-using Tmp.Asset.BuiltIn.Texture;
 
 namespace Tmp.Render.Components;
 
-public class CSubViewport(CSubViewport.Props props) : Component(self =>
+public class CSubViewport(CSubViewport.Props props) : ComponentFunc((self, children) =>
 {
-    var container = self.Use<ISubViewportContainer>();
+    var container = self.UseContext<ISubViewportContainer>();
     var viewport = new SubViewport(
         props.Size
     );
@@ -18,17 +19,13 @@ public class CSubViewport(CSubViewport.Props props) : Component(self =>
     {
         Local = Transform2D.Identity
     });
+
+    props.Texture.Set(viewport.Texture);
     
-    self.UseEffect(() =>
-    {
-        props.Texture.Set(viewport.Texture);
-    }, []);
-    
-    self.UseEffect(() =>
-    {
-        viewport.AddTo(container.Get());
-        return () => viewport.RemoveFrom(container.Get());
-    }, [container]);
+    viewport.AddTo(container);
+    self.OnCleanup(() => viewport.RemoveFrom(container));
+
+    return children;
 })
 {
     public readonly struct Props

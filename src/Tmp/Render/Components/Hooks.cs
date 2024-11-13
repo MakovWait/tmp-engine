@@ -1,5 +1,4 @@
-﻿using Tmp.Core;
-using Tmp.Core.Redot;
+﻿using Tmp.Core.Comp;
 using Tmp.Math.Components;
 using Tmp.Render.Util;
 
@@ -7,22 +6,22 @@ namespace Tmp.Render.Components;
 
 public static class Hooks
 {
-    public static CanvasItem UseCanvasItem(this Component.Self self, IScalar<СNode2DTransform> transform)
+    public static CanvasItem UseCanvasItem(this INodeInit self, СNode2DTransform transform)
     {
-        var parent = self.Use<ICanvasItemContainer>();
+        var parent = self.UseContext<ICanvasItemContainer>();
         var item = new CanvasItem();
 
         self.CreateContext<ICanvasItemContainer>(item);
 
-        self.UseEffect(() =>
+        parent.AddChild(item);
+        self.OnCleanup(() =>
         {
-            parent.Get().AddChild(item);
-            return () => parent.Get().RemoveChild(item);
-        }, [parent]);
+            parent.RemoveChild(item);
+        });
 
-        self.On<PreDraw>(() =>
+        self.On<PreDraw>(_ =>
         {
-            item.SetFinalTransform(transform.Get().Global);
+            item.SetFinalTransform(transform.Global);
         });
 
         return item;

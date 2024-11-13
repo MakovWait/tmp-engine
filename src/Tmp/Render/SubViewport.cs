@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using Raylib_cs;
-using Tmp.Core.Redot;
+using Tmp.Asset.BuiltIn.Texture;
+using Tmp.Core.Comp;
 using Tmp.Math;
 using Tmp.Render.Util;
-using Tmp.Asset.BuiltIn.Texture;
 
 namespace Tmp.Render;
 
@@ -73,7 +73,7 @@ public class SubViewport : IViewport
         Raylib.EndTextureMode();
     }
 
-    internal void BindTo(Component.Self self)
+    internal void BindTo(INodeInit self)
     {
         self.CreateContext<ICanvasItemContainer>(_canvas);
         self.CreateContext<ICanvasLayerContainer>(_canvasLayers);
@@ -81,11 +81,8 @@ public class SubViewport : IViewport
         self.CreateContext<ICamera2D>(_camera);
         self.CreateContext<IViewport>(this);
         
-        self.UseEffect(() =>
-        {
-            Load();
-            return Unload;
-        }, []);
+        Load();
+        self.OnCleanup(Unload);
     }
 
     public class SubViewportTexture(SubViewport subViewport) : ITexture2D

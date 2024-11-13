@@ -4,9 +4,9 @@ public class Conditional : Component
 {
     public required ISignal<bool> When { get; init; }
 
-    protected override Components Init()
+    protected override Components Init(INodeInit self)
     {
-        Self.UseEffect(prev =>
+        self.UseEffect(prev =>
         {
             var render = When.Value;
             if (prev == render) return render;
