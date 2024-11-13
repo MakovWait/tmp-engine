@@ -243,6 +243,61 @@ public class UseEffectTests
     }
 }
 
+public class CreateSignalTests
+{
+    [Test]
+    public void Smoke()
+    {
+        var tree = new Tree();
+
+        var effectCalls = 0;
+        var reactive = new TestReactive<int>(0);
+        tree.Build(new ComponentFunc(self =>
+        {
+            var createdSignal = self.CreateSignal(set =>
+            {
+                var trigger = () => set(reactive);
+                reactive.Changed += trigger; 
+                return () =>
+                {
+                    reactive.Changed -= trigger;
+                };
+            }, reactive);
+            
+            self.UseEffect(() =>
+            {
+                createdSignal.Track();
+                effectCalls++;
+            });
+            
+            return [];
+        }));
+
+        tree.FlushDeferredQueue();
+        reactive.Set(2);
+        tree.FlushDeferredQueue();
+        Assert.That(effectCalls, Is.EqualTo(2));
+    }
+
+    public class TestReactive<T>(T initial)
+    {
+        public Action? Changed;
+        
+        private T _value = initial;
+        
+        public T Get()
+        {
+            return _value;
+        }
+
+        public void Set(T value)
+        {
+            _value = value;
+            Changed?.Invoke();
+        }
+    }
+}
+
 public class UseComputedTests
 {
     [Test]

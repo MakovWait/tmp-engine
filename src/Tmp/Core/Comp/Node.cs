@@ -159,6 +159,19 @@ public class Node : INodeInit
     {
         return _signals.Create(initial, equals);
     }
+    
+    public ISignal<T> CreateSignal<T>(CreateSignalFactory<T> factory, T initial)
+    {
+        var signal = _signals.Create(initial, null);
+        
+        // TODO add cleanup to signals
+        var cleanup = factory(newVal =>
+        {
+            signal.Value = newVal;
+        });
+        
+        return signal;
+    }
 
     public void OnCleanup(ICleanup cleanup)
     {
@@ -611,6 +624,8 @@ public class Tree : IDeferredQueue
     }
 }
 
+public delegate Action CreateSignalFactory<out T>(Action<T> set);
+
 public interface INodeInit
 {
     ISignal<string> Name { get; }
@@ -623,6 +638,8 @@ public interface INodeInit
 
     ISignalMut<T> UseSignal<T>(T initial, ISignalValueEquals<T>? equals);
 
+    ISignal<T> CreateSignal<T>(CreateSignalFactory<T> factory, T initial);
+    
     void OnCleanup(ICleanup cleanup);
 
     void OnMount(Action action);
