@@ -1,4 +1,4 @@
-﻿namespace Tmp.Core.Redot;
+﻿namespace Tmp.Core;
 
 public interface IRef<out T> : IScalar<T>;
 

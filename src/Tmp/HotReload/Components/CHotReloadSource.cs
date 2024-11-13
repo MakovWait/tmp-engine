@@ -1,24 +1,20 @@
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 
 namespace Tmp.HotReload.Components;
 
-public class CHotReloadSource() : Component(self =>
+public class CHotReloadSource() : ComponentFunc((self, children) =>
 {
     var hotReloadSource = new HotReloadSource();
-    self.SetSingleton<IHotReloadSource>(hotReloadSource);
+    self.CreateContext<IHotReloadSource>(hotReloadSource);
 
     var target = new HotReloadTarget(self);
-    self.UseEffect(() =>
-    {
-        hotReloadSource.Add(target);
-        return () =>
-        {
-            hotReloadSource.Remove(target);
-        };
-    }, []);
+    hotReloadSource.Add(target);
+    self.OnCleanup(() => hotReloadSource.Remove(target));
+
+    return children;
 })
 {
-    private class HotReloadTarget(Self self) : IHotReloadTarget
+    private class HotReloadTarget(INodeInit self) : IHotReloadTarget
     {
         public void ClearCache(Type[]? types)
         {

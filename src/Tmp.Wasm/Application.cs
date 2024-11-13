@@ -9,7 +9,7 @@ public partial class Application
 
     public static async Task Main()
     {
-        _app = new App(Project.Project.GetPlugins());
+        _app = new App(Project.Project.GetRoot());
         _app.SetRunner(new AppRunnerBrowser());
         await _app.Run();
     }

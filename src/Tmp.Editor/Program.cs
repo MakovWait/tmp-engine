@@ -9,7 +9,6 @@ using Tmp.Project;
 using Tmp.Render;
 using Tmp.Window;
 using Tmp.Window.Components;
-using Component = Tmp.Core.Redot.Component;
 
 var app = new App(new CWindowsImGui
 {

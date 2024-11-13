@@ -1,6 +1,6 @@
 using Tmp.Asset.BuiltIn.Texture;
+using Tmp.Core;
 using Tmp.Core.Comp;
-using Tmp.Core.Redot;
 using Tmp.Math;
 using Tmp.Math.Components;
 using Tmp.Render.Util;

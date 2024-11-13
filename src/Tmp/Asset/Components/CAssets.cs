@@ -1,12 +1,12 @@
 using Tmp.Asset.BuiltIn.Texture;
 using Tmp.Asset.Format.Text;
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 
 namespace Tmp.Asset.Components;
 
-public sealed class CAssets(IAssets assets) : Component(self =>
+public sealed class CAssets(IAssets assets) : ComponentFunc((self, children) =>
 {
-    self.SetSingleton(assets);
+    self.CreateContext(assets);
     
     var textLoader = new AssetLoaderText();
     textLoader.AddDeserializer(new TextureRegion2D.Deserializer());
@@ -14,5 +14,7 @@ public sealed class CAssets(IAssets assets) : Component(self =>
     
     assets.AddLoader(textLoader);
 
-    self.UseEffect(() => assets.Dispose, []);
+    self.OnCleanup(assets.Dispose);
+
+    return children;
 });

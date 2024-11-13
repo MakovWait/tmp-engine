@@ -1,12 +1,12 @@
-using Tmp.Core.Redot;
+using Tmp.Core.Comp;
 
 namespace Tmp.Asset.Components;
 
 public static class Hooks
 {
-    public static IAsset<T> UseAsset<T>(this Component.Self self, AssetPath path)
+    public static IAsset<T> UseAsset<T>(this INodeInit self, AssetPath path)
     {
-        var assets = self.UseSingleton<IAssets>();
+        var assets = self.UseContext<IAssets>();
         return assets.Load<T>(path);
     }
 }

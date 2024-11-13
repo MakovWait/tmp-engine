@@ -676,6 +676,11 @@ public static class NodeInitExUseObjSignal
 
 public static class NodeInitEx
 {
+    public static void Call<T>(this INodeInit self) where T : new()
+    {
+        self.Call<T>(new T());
+    }
+    
     public static void UseEffect<T>(this INodeInit self, Func<T, T> effect, T initial)
     {
         self.UseEffect(new Computation<T>(effect, initial));
