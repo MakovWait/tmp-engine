@@ -278,6 +278,28 @@ public class CreateSignalTests
         tree.FlushDeferredQueue();
         Assert.That(effectCalls, Is.EqualTo(2));
     }
+    
+    [Test]
+    public void CleanupIsCalled()
+    {
+        var tree = new Tree();
+
+        tree.Build(new ComponentFunc(self =>
+        {
+            var createdSignal = self.CreateSignal(set =>
+            {
+                return () =>
+                {
+                    Assert.Pass();
+                };
+            }, 0);
+            
+            return [];
+        }));
+
+        tree.Free();
+        Assert.Fail();
+    }
 
     public class TestReactive<T>(T initial)
     {

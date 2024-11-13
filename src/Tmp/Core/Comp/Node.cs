@@ -10,6 +10,7 @@ public class Node : INodeInit
     private readonly Children _children = new();
     private readonly Callbacks _callbacks = new();
     private readonly Callbacks _lateCallbacks = new();
+    private readonly List<Action> _cleanups = [];
     
     private NodeState _state = NodeState.Building;
     private Scope? _scope;
@@ -46,6 +47,10 @@ public class Node : INodeInit
     {
         _scope!.Clean();
         _children.Free();
+        foreach (var cleanup in _cleanups)
+        {
+            cleanup();
+        }
         _state = NodeState.Freed;
     }
 
@@ -164,11 +169,11 @@ public class Node : INodeInit
     {
         var signal = _signals.Create(initial, null);
         
-        // TODO add cleanup to signals
         var cleanup = factory(newVal =>
         {
             signal.Value = newVal;
         });
+        _cleanups.Add(cleanup);
         
         return signal;
     }
