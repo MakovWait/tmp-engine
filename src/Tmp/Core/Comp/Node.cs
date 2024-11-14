@@ -605,8 +605,8 @@ public class Tree : IDeferredQueue
         public TreeDeferredQueue()
         {
             _current = new DeferredQueue();
-            _buffer.Enqueue(_current);
             _buffer.Enqueue(new DeferredQueue());
+            _buffer.Enqueue(_current);
         }
 
         public void Enqueue(IDeferredAction action)
