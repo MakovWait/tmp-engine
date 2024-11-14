@@ -33,6 +33,18 @@ public class Component : IComponent, IEnumerable<IComponent>
         return Children;
     }
     
+    protected Node CreateChild(IComponent component)
+    {
+        return component.Build(Tree, Self);
+    }
+    
+    protected Node CreateChildAndMount(IComponent component)
+    {
+        var child = CreateChild(component);
+        child.Mount();
+        return child;
+    }
+    
     protected void CreateChildren(Components components)
     {
         foreach (var component in components)

@@ -1,4 +1,5 @@
 using Tmp.Core.Comp;
+using Tmp.Core.Comp.Flow;
 
 namespace Tmp.Tests.ComponentsTree;
 
@@ -138,6 +139,44 @@ public class Tests
         cond!.Value = true;
         cond!.Value = false;
         cond!.Value = true;
+    }
+}
+
+public class ForTests
+{
+    [Test]
+    public void Smoke()
+    {
+        var tree = new Tree();
+
+        var items = new ReactiveList<Item>();
+        tree.Build(new ComponentFunc(self =>
+        {
+            return new For<Item>
+            {
+                In = items,
+                Render = (item, _) => new ComponentFunc(self =>
+                {
+                    self.OnMount(() =>
+                    {
+                        Assert.That(item.Key, Is.EqualTo("test"));
+                        Assert.Pass();
+                    });
+                    return [];
+                })
+            };
+        }));
+        
+        items.Add(new Item("test"));
+        tree.FlushDeferredQueue();
+        tree.FlushDeferredQueue();
+        
+        Assert.Fail();
+    }
+
+    private class Item(string key) : For<Item>.IItem
+    {
+        public string Key { get; } = key;
     }
 }
 

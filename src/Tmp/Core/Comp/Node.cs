@@ -118,6 +118,11 @@ public class Node : INodeInit
         child._parent = null;
         _children.Remove(child);
     }
+
+    public IReadOnlyList<Node> GetChildren()
+    {
+        return _children.List;
+    }
     
     public void ClearChildren()
     {
