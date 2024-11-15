@@ -6,7 +6,7 @@ namespace Tmp.Core.Comp;
 public class Component : IComponent, IEnumerable<IComponent>
 {
     public Components Children { get; init; } = [];
-    public string? Name { get; init; } = null;
+    public string? Name { get; set; } = null;
 
     private Node? _self;
     private Tree? _tree;
@@ -17,7 +17,7 @@ public class Component : IComponent, IEnumerable<IComponent>
     public Node Build(Tree tree, Node? parent)
     {
         _tree = tree;
-        _self = tree.CreateNode(Name ?? "Node");
+        _self = tree.CreateNode(Name ?? DefaultName());
         parent?.AddChild(_self);
         
         _self.Init(_ =>
@@ -26,6 +26,22 @@ public class Component : IComponent, IEnumerable<IComponent>
         });
         
         return _self;
+    }
+
+    private string DefaultName()
+    {
+        var name = GetType().Name;
+        // if (name.Equals("Component") || name.Equals("ComponentFunc"))
+        // {
+        //     name = "Node";
+        // }
+        return name;
+    }
+    
+    public Component WithName(string name)
+    {
+        Name = name;
+        return this;
     }
 
     protected virtual Components Init(INodeInit self)

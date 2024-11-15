@@ -636,7 +636,41 @@ public class Tree : IDeferredQueue
 
 public delegate Action CreateSignalFactory<out T>(Action<T> set);
 
-public interface INodeInit
+public interface INodeLocator
+{
+    Node? Get(INodeLocation location);
+}
+
+public static class NodeLocatorEx
+{
+    public static INodeLocator AsNodePathLocator(this string self)
+    {
+        return new LocatorNodePath(new NodePath(self));
+    }
+    
+    public static INodeLocator AsNodePathLocator(this NodePath self)
+    {
+        return new LocatorNodePath(self);
+    }
+}
+
+[DebuggerDisplay("{_path}")]
+public class LocatorNodePath(NodePath path) : INodeLocator
+{
+    private readonly NodePath _path = path;
+    
+    public Node? Get(INodeLocation location)
+    {
+        return location.GetNode(_path);
+    }
+}
+
+public interface INodeLocation
+{
+    Node? GetNode(NodePath nodePath);
+}
+
+public interface INodeInit : INodeLocation
 {
     ISignal<string> Name { get; }
     

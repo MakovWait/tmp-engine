@@ -32,6 +32,10 @@ public static class Project
                     {
                         OnDraw = ctx => ctx.DrawFps(),
                     },
+                    new Component()
+                    {
+                        Name = "BulletsContainer"
+                    }
                 },
                 new CCamera2D()
                 {
@@ -58,10 +62,13 @@ public static class Project
                         }
                     });
                     
-                    return new For<Bullet>
+                    return new Portal("../../CCanvasLayer/BulletsContainer".AsNodePathLocator())
                     {
-                        In = bullets,
-                        Render = (bullet, _) => new CBullet(bullet)
+                        new For<Bullet>
+                        {
+                            In = bullets,
+                            Render = (bullet, _) => new CBullet(bullet)
+                        }
                     };
                 })
             }

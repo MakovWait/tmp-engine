@@ -180,6 +180,50 @@ public class ForTests
     }
 }
 
+public class PortalTests
+{
+    [Test]
+    public void Smoke()
+    {
+        var tree = new Tree();
+
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.SetName("root");
+            self.CreateContext(0);
+            return
+            [
+                new ComponentFunc(self =>
+                {
+                    self.SetName("remote-parent");
+                    self.CreateContext(1);
+                    return [];
+                }),
+                new Portal("/root/remote-parent".AsNodePathLocator())
+                {
+                    new ComponentFunc(self =>
+                    {
+                        var ctx = self.UseContext<int>();
+
+                        self.UseEffect(() =>
+                        {
+                            Assert.That(ctx, Is.EqualTo(1));
+                            Assert.Pass();
+                        });
+
+                        return [];
+                    })
+                }
+            ];
+        }));
+
+        tree.FlushDeferredQueue();
+        tree.FlushDeferredQueue();
+        
+        Assert.Fail();
+    }
+}
+
 public class UseEffectTests
 {
     [Test]
