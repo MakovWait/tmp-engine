@@ -1,4 +1,7 @@
 ﻿using Raylib_cs;
+using Tmp.Asset;
+using Tmp.Asset.BuiltIn.Texture;
+using Tmp.Asset.Components;
 using Tmp.Core;
 using Tmp.Core.Comp;
 using Tmp.Core.Comp.Flow;
@@ -20,57 +23,60 @@ public static class Project
             TargetFps = 60
         })
         {
-            new CNode2DTransformRoot()
+            new CAssets(new Assets())
             {
-                new CCanvasItem()
-                {
-                    OnDraw = ctx => ctx.DrawFps(),
-                },
-                new CCanvasLayer()
+                new CNode2DTransformRoot()
                 {
                     new CCanvasItem()
                     {
                         OnDraw = ctx => ctx.DrawFps(),
                     },
+                    new CCanvasLayer()
+                    {
+                        new CCanvasItem()
+                        {
+                            OnDraw = ctx => ctx.DrawFps(),
+                        },
+                    },
+                    new CCamera2D()
+                    {
+                        Width = 400,
+                        Height = 225
+                    },
                     new Component()
                     {
                         Name = "BulletsContainer"
-                    }
-                },
-                new CCamera2D()
-                {
-                    Width = 400,
-                    Height = 225
-                },
-                new ComponentFunc(self =>
-                {
-                    var bullets = new ReactiveList<Bullet>();
-                    
-                    self.On<InputEventKey>(e =>
+                    },
+                    new ComponentFunc(self =>
                     {
-                        if (e.IsJustPressed() && e.KeyCode == KeyboardKey.Space)
+                        var bullets = new ReactiveList<Bullet>();
+                        
+                        self.On<InputEventKey>(e =>
                         {
-                            bullets.Add(new Bullet(Guid.NewGuid().ToString())
+                            if (e.IsJustPressed() && e.KeyCode == KeyboardKey.Space)
                             {
-                                Dir = Vector2.Right
-                            });
-                        }
+                                bullets.Add(new Bullet(Guid.NewGuid().ToString())
+                                {
+                                    Dir = Vector2.Right
+                                });
+                            }
 
-                        if (e.IsJustPressed() && e.KeyCode == KeyboardKey.Q)
+                            if (e.IsJustPressed() && e.KeyCode == KeyboardKey.Q)
+                            {
+                                bullets.Clear();
+                            }
+                        });
+
+                        return new Portal("../../BulletsContainer".AsNodePathLocator())
                         {
-                            bullets.Clear();
-                        }
-                    });
-                    
-                    return new Portal("../../CCanvasLayer/BulletsContainer".AsNodePathLocator())
-                    {
-                        new For<Bullet>
-                        {
-                            In = bullets,
-                            Render = (bullet, _) => new CBullet(bullet)
-                        }
-                    };
-                })
+                            new For<Bullet>
+                            {
+                                In = bullets,
+                                Render = (bullet, _) => new CBullet(bullet)
+                            }
+                        };
+                    })
+                }
             }
         };
     }
@@ -79,9 +85,9 @@ public static class Project
 internal class Bullet(string key) : For<Bullet>.IItem
 {
     public string Key { get; } = key;
-    
+
     public required Vector2 Dir { get; init; }
-    
+
     public Transform2D Transform { get; init; } = Transform2D.Identity;
 }
 
@@ -91,17 +97,20 @@ internal class CBullet(Bullet bullet) : Component
     {
         var transform = self.UseTransform2D(bullet.Transform);
         var canvasItem = self.UseCanvasItem(transform);
-        
+        var texture = self.UseAsset<ITexture2D>("assets://test.jass");
+
         canvasItem.OnDraw(ctx =>
         {
-            ctx.DrawRect(new Rect2I(0, 0, 16, 16), Color.Blue);
+            texture.Get().Draw(ctx, new Vector2(-8, -8), Color.White);
+            texture.Get().Draw(ctx, new Vector2(0, 0), Color.White);
         });
-        
+
         self.On<Update>(dt =>
         {
             transform.Position += bullet.Dir * dt * 10;
+            transform.Rotation += dt * 360.DegToRad();
         });
-        
+
         return [];
     }
 }
