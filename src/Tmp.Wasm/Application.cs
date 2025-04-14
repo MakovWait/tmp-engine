@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
+using Tmp.Window.Components;
 
 namespace Tmp.Wasm;
 
@@ -9,7 +10,10 @@ public partial class Application
 
     public static async Task Main()
     {
-        _app = new App(Project.Project.GetRoot());
+        _app = new App(new CWindowsRl
+        {
+            Project.Project.GetRoot()
+        });
         _app.SetRunner(new AppRunnerBrowser());
         await _app.Run();
     }

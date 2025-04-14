@@ -53,7 +53,7 @@ public static class Project
                         
                         self.On<InputEventKey>(e =>
                         {
-                            if (e.IsJustPressed() && e.KeyCode == KeyboardKey.Space)
+                            if (e.IsJustPressed() && e.KeyCode == KeyboardKey.E)
                             {
                                 bullets.Add(new Bullet(Guid.NewGuid().ToString())
                                 {
