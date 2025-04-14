@@ -15,16 +15,12 @@
         <WasmNativeStrip>true</WasmNativeStrip>
         <WasmAllowUndefinedSymbols>true</WasmAllowUndefinedSymbols>
     </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Raylib-cs" Version="6.1.1" />
-    </ItemGroup>
-
+    
     <ItemGroup>
         <WasmExtraFilesToDeploy Include="index.html" />
         <WasmExtraFilesToDeploy Include="main.js" />
         <NativeFileReference Include="raylib.a" />
-        <WasmFilesToIncludeInFileSystem Include="Resources\**\*.*" TargetPath="Resources\%(RecursiveDir)\%(Filename)%(Extension)" />
+        <WasmFilesToIncludeInFileSystem Include="..\Tmp.Project\assets\**\*.*" TargetPath="assets\%(RecursiveDir)\%(Filename)%(Extension)" />
     </ItemGroup>
 
     <ItemGroup>
