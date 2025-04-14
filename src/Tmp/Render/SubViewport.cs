@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Raylib_cs;
+using Hexa.NET.Raylib;
 using Tmp.Asset.BuiltIn.Texture;
 using Tmp.Core.Comp;
 using Tmp.Math;
@@ -62,7 +62,7 @@ public class SubViewport : IViewport
         _subViewports.Draw();
 
         Raylib.BeginTextureMode(RenderTarget);
-        Raylib.ClearBackground(Color.Black);
+        Raylib.ClearBackground(Raylib.Black);
 
         Raylib.BeginMode2D(_camera);
         _canvas.Draw();

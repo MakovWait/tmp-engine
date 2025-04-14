@@ -1,4 +1,4 @@
-﻿using Raylib_cs;
+﻿using Hexa.NET.Raylib;
 using Tmp.Asset;
 using Tmp.Asset.BuiltIn.Texture;
 using Tmp.Asset.Components;
@@ -101,8 +101,8 @@ internal class CBullet(Bullet bullet) : Component
 
         canvasItem.OnDraw(ctx =>
         {
-            texture.Get().Draw(ctx, new Vector2(-8, -8), Color.White);
-            texture.Get().Draw(ctx, new Vector2(0, 0), Color.White);
+            texture.Get().Draw(ctx, new Vector2(-8, -8), Raylib.White);
+            texture.Get().Draw(ctx, new Vector2(0, 0), Raylib.White);
         });
 
         self.On<Update>(dt =>

@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Raylib_cs;
+using Hexa.NET.Raylib;
 using Tmp.Math;
 using Tmp.Render.Util;
 
@@ -113,33 +113,33 @@ public class CanvasItem : ICanvasItemContainer, IDrawContext
         var sourceWidth = sourceRect.Size.X;
         var sourceHeight = sourceRect.Size.Y;
         
-        Rlgl.SetTexture(texture.Id);
-        Rlgl.Begin(DrawMode.Quads);
+        Raylib.RlSetTexture(texture.Id);
+        Raylib.RlBegin(Raylib.RL_QUADS);
         
-        Rlgl.Color4ub(modulate.R, modulate.G, modulate.B, modulate.A);
-        Rlgl.Normal3f(0.0f, 0.0f, 1.0f);
+        Raylib.RlColor4Ub(modulate.R, modulate.G, modulate.B, modulate.A);
+        Raylib.RlNormal3F(0.0f, 0.0f, 1.0f);
         
-        if (flipX) Rlgl.TexCoord2f((sourceX + sourceWidth)/width, sourceY/height);
-        else Rlgl.TexCoord2f(sourceX/width, sourceY/height);
-        Rlgl.Vertex2f(topLeft.X, topLeft.Y);
+        if (flipX) Raylib.RlTexCoord2F((sourceX + sourceWidth)/width, sourceY/height);
+        else Raylib.RlTexCoord2F(sourceX/width, sourceY/height);
+        Raylib.RlVertex2F(topLeft.X, topLeft.Y);
 
         // Bottom-left corner for texture and quad
-        if (flipX) Rlgl.TexCoord2f((sourceX + sourceWidth)/width, (sourceY + sourceHeight)/height);
-        else Rlgl.TexCoord2f(sourceX/width, (sourceY + sourceHeight)/height);
-        Rlgl.Vertex2f(bottomLeft.X, bottomLeft.Y);
+        if (flipX) Raylib.RlTexCoord2F((sourceX + sourceWidth)/width, (sourceY + sourceHeight)/height);
+        else Raylib.RlTexCoord2F(sourceX/width, (sourceY + sourceHeight)/height);
+        Raylib.RlVertex2F(bottomLeft.X, bottomLeft.Y);
 
         // Bottom-right corner for texture and quad
-        if (flipX) Rlgl.TexCoord2f(sourceX/width, (sourceY + sourceHeight)/height);
-        else Rlgl.TexCoord2f((sourceX + sourceWidth)/width, (sourceY + sourceHeight)/height);
-        Rlgl.Vertex2f(bottomRight.X, bottomRight.Y);
+        if (flipX) Raylib.RlTexCoord2F(sourceX/width, (sourceY + sourceHeight)/height);
+        else Raylib.RlTexCoord2F((sourceX + sourceWidth)/width, (sourceY + sourceHeight)/height);
+        Raylib.RlVertex2F(bottomRight.X, bottomRight.Y);
         
         // Top-right corner for texture and quad
-        if (flipX) Rlgl.TexCoord2f(sourceX/width, sourceY/height);
-        else Rlgl.TexCoord2f((sourceX + sourceWidth)/width, sourceY/height);
-        Rlgl.Vertex2f(topRight.X, topRight.Y);
+        if (flipX) Raylib.RlTexCoord2F(sourceX/width, sourceY/height);
+        else Raylib.RlTexCoord2F((sourceX + sourceWidth)/width, sourceY/height);
+        Raylib.RlVertex2F(topRight.X, topRight.Y);
         
-        Rlgl.End();
-        Rlgl.SetTexture(0);
+        Raylib.RlEnd();
+        Raylib.RlSetTexture(0);
     }
 
     public void DrawFps()

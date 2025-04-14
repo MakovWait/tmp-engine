@@ -1,4 +1,4 @@
-using Raylib_cs;
+using Hexa.NET.Raylib;
 using Tmp.Core.Comp;
 using Tmp.Core.Resource;
 

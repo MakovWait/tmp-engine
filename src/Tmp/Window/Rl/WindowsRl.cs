@@ -1,4 +1,4 @@
-using Raylib_cs;
+using Hexa.NET.Raylib;
 using Tmp.Core;
 using Tmp.Core.Comp;
 using Tmp.Math;
@@ -15,7 +15,8 @@ public class WindowsRl : IWindows
     public void Start(WindowSettings settings, Input input)
     {
         var size = settings.Size ?? new Vector2I(800, 450);
-        Raylib.SetConfigFlags(ConfigFlags.TopmostWindow | ConfigFlags.ResizableWindow);
+        // FIXME
+        // Raylib.SetConfigFlags(ConfigFlags.TopmostWindow | ConfigFlags.ResizableWindow);
         Raylib.InitWindow(
             size.X,
             size.Y,
@@ -38,7 +39,7 @@ public class WindowRl(AppViewport viewport) : IWindow, IAppViewportTarget
     public void Draw()
     {
         Raylib.BeginDrawing();
-        Raylib.ClearBackground(Color.White);
+        Raylib.ClearBackground(Raylib.White);
 
         var size = new Vector2I(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
         viewport.Draw(size, this);
@@ -59,7 +60,7 @@ public class WindowRl(AppViewport viewport) : IWindow, IAppViewportTarget
             rect,
             Vector2.Zero,
             0,
-            Color.White
+            Raylib.White
         );
     }
 }

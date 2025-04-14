@@ -1,4 +1,4 @@
-using Raylib_cs;
+using Hexa.NET.Raylib;
 using Tmp.Core.Comp;
 using Tmp.Math;
 
@@ -11,13 +11,13 @@ public class Input(bool enabled)
 
     private bool _enabled = enabled;
 
-    public bool IsKeyJustPressed(KeyboardKey key) => _enabled && Raylib.IsKeyPressed(key);
+    public bool IsKeyJustPressed(KeyboardKey key) => _enabled && Raylib.IsKeyPressed((int)key);
 
-    public bool IsKeyPressed(KeyboardKey key) => _enabled && Raylib.IsKeyDown(key);
+    public bool IsKeyPressed(KeyboardKey key) => _enabled && Raylib.IsKeyDown((int)key);
 
-    public bool IsKeyUp(KeyboardKey key) => _enabled && Raylib.IsKeyUp(key);
+    public bool IsKeyUp(KeyboardKey key) => _enabled && Raylib.IsKeyUp((int)key);
 
-    public bool IsKeyJustReleased(KeyboardKey key) => _enabled && Raylib.IsKeyReleased(key);
+    public bool IsKeyJustReleased(KeyboardKey key) => _enabled && Raylib.IsKeyReleased((int)key);
 
     public void Enable(bool enabled)
     {
@@ -36,15 +36,15 @@ public class Input(bool enabled)
 
         foreach (var key in _pressedKeys)
         {
-            if (Raylib.IsKeyPressed(key))
+            if (Raylib.IsKeyPressed((int)key))
             {
                 subTree.Call(new InputEventKey(key, true, false));
             }
-            else if (Raylib.IsKeyPressedRepeat(key))
+            else if (Raylib.IsKeyPressedRepeat((int)key))
             {
-                subTree.Call(new InputEventKey(key, true, Raylib.IsKeyPressedRepeat(key)));
+                subTree.Call(new InputEventKey(key, true, Raylib.IsKeyPressedRepeat((int)key)));
             }
-            else if (Raylib.IsKeyReleased(key))
+            else if (Raylib.IsKeyReleased((int)key))
             {
                 subTree.Call(new InputEventKey(key, false, false));
                 _releasedKeysThisFrame.Add(key);
@@ -73,8 +73,8 @@ public readonly record struct InputEventMouseMotion(Vector2I Velocity) : IInputE
 
 public readonly record struct InputEventKey(KeyboardKey KeyCode, bool Pressed, bool IsEcho) : IInputEvent
 {
-    public bool IsJustPressed() => Raylib.IsKeyPressed(KeyCode);
+    public bool IsJustPressed() => Raylib.IsKeyPressed((int)KeyCode);
 
-    public bool IsJustReleased() => Raylib.IsKeyReleased(KeyCode);
+    public bool IsJustReleased() => Raylib.IsKeyReleased((int)KeyCode);
 }
 ;
