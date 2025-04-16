@@ -138,6 +138,26 @@ public interface ISignal<out T> : ISignal
     void SetValueEquals(ISignalValueEquals<T>? equals);
 }
 
+[DebuggerDisplay("Name = {_name}, Value = {Value}")]
+public class SignalConst<T>(T value) : ISignal<T>
+{
+    private string? _name;
+
+    public void SetDebugName(string name)
+    {
+        _name = name;
+    }
+
+    public T Value { get; } = value;
+
+    public T UntrackedValue => Value;
+
+    public void SetValueEquals(ISignalValueEquals<T>? equals)
+    {
+        
+    }
+}
+
 public interface ISignalMut<T> : ISignal<T>
 {
     public new T Value { get; set; }
@@ -147,6 +167,11 @@ public interface ISignalMut<T> : ISignal<T>
 
 public static class SignalEx
 {
+    public static ISignal<T> ToSignal<T>(this T value)
+    {
+        return new SignalConst<T>(value);
+    }
+    
     public static TSelf WithName<TSelf>(this TSelf self, string name) where TSelf : ISignal
     {
         self.SetDebugName(name);
