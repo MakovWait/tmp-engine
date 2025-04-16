@@ -245,7 +245,7 @@ public struct Transform2D : IEquatable<Transform2D>
     /// </summary>
     /// <param name="angle">The angle to rotate, in radians.</param>
     /// <returns>The rotated transformation matrix.</returns>
-    public readonly Transform2D Rotated(float angle)
+    public readonly Transform2D Rotated(Radians angle)
     {
         return new Transform2D(angle, new Vector2()) * this;
     }
