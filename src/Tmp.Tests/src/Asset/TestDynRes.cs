@@ -10,7 +10,7 @@ public class TestMemRes
         var assets = new Assets();
 
         var asset = assets.AddMem("test", "test");
-        Assert.That(asset.Get(), Is.EqualTo("test"));
+        Assert.That(asset.Value, Is.EqualTo("test"));
     }
 
     [Test]
@@ -20,7 +20,7 @@ public class TestMemRes
         assets.AddMem("test", "test");
 
         var loadedAsset = assets.Load<string>("mem://test");
-        Assert.That(loadedAsset.Get(), Is.EqualTo("test"));
+        Assert.That(loadedAsset.Value, Is.EqualTo("test"));
     }
 
     [Test]

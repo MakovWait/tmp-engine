@@ -4,20 +4,10 @@ public interface IRef<out T> : IScalar<T>;
 
 public interface IRefMut<T> : IRef<T>
 {
-    void Set(T value);
+    new T Value { get; set; }
 }
 
 internal class Ref<T>(T initial = default!) : IRefMut<T>
 {
-    private T _value = initial;
-    
-    public T Get()
-    {
-        return _value;
-    }
-
-    public void Set(T value)
-    {
-        _value = value;
-    }
+    public T Value { get; set; } = initial;
 }

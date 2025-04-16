@@ -30,7 +30,7 @@ public class TestLoad
         assets.AddLoader(textLoader);
         
         var typed = assets.Load<TestAsset>("assets://untyped-asset/asset.jass");
-        Assert.That(typed.Get(), Is.Not.EqualTo(null));
+        Assert.That(typed.Value, Is.Not.EqualTo(null));
     }
     
     [Test]

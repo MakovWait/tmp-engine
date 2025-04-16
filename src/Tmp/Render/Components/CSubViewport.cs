@@ -20,7 +20,7 @@ public class CSubViewport(CSubViewport.Props props) : ComponentFunc((self, child
         Local = Transform2D.Identity
     });
 
-    props.Texture.Set(viewport.Texture);
+    props.Texture.Value = viewport.Texture;
     
     viewport.AddTo(container);
     self.OnCleanup(() => viewport.RemoveFrom(container));

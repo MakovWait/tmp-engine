@@ -10,17 +10,17 @@ public class TextureRegion2D(IAsset<ITexture2D> origin, Rect2 srcRect) : ITextur
 {
     public void Draw(IDrawContext ctx, Vector2 position, Color modulate)
     {
-        origin.Get().DrawTextureRectRegion(ctx, new Rect2(position, srcRect.Size), srcRect, modulate);
+        origin.Value.DrawTextureRectRegion(ctx, new Rect2(position, srcRect.Size), srcRect, modulate);
     }
 
     public void DrawTextureRect(IDrawContext ctx, Rect2 rect, Color modulate)
     {
-        origin.Get().DrawTextureRectRegion(ctx, rect, srcRect, modulate);
+        origin.Value.DrawTextureRectRegion(ctx, rect, srcRect, modulate);
     }
 
     public void DrawTextureRectRegion(IDrawContext ctx, Rect2 rect, Rect2 srcRectCustom, Color modulate)
     {
-        origin.Get().DrawTextureRectRegion(ctx, rect, srcRect.Intersection(srcRectCustom), modulate);
+        origin.Value.DrawTextureRectRegion(ctx, rect, srcRect.Intersection(srcRectCustom), modulate);
     }
 
     void ISerializable.WriteTo(ISerializeOutput output)

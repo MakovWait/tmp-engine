@@ -19,7 +19,7 @@ public static class Project
         return new CWindow(new WindowSettings
         {
             Title = "Hello world!",
-            Size = new Vector2I(800, 450),
+            Size = new Vector2I(640, 360),
             TargetFps = 60
         })
         {
@@ -40,8 +40,8 @@ public static class Project
                     },
                     new CCamera2D()
                     {
-                        Width = 400,
-                        Height = 225
+                        Width = 640/2f,
+                        Height = 360f/2
                     },
                     new Component()
                     {
@@ -101,8 +101,8 @@ internal class CBullet(Bullet bullet) : Component
 
         canvasItem.OnDraw(ctx =>
         {
-            texture.Get().Draw(ctx, new Vector2(-8, -8), Color.White);
-            texture.Get().Draw(ctx, new Vector2(0, 0), Color.White);
+            texture.Value.Draw(ctx, new Vector2(-8, -8), Color.White);
+            texture.Value.Draw(ctx, new Vector2(0, 0), Color.White);
         });
 
         self.On<Update>(dt =>

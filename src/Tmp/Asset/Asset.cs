@@ -11,7 +11,8 @@ internal sealed class _Asset<T>(
 {
     private T _value = value;
     private bool _disposed;
-    
+    private T _value1;
+
     public AssetPath Path { get; } = path;
     
     public void Reload()
@@ -21,10 +22,13 @@ internal sealed class _Asset<T>(
         _value = reload.Invoke();
     }
     
-    public T Get()
+    public T Value
     {
-        Debug.Assert(!_disposed);
-        return _value;
+        get
+        {
+            Debug.Assert(!_disposed);
+            return _value;   
+        }
     }
 
     public void Dispose()
@@ -49,7 +53,7 @@ public interface IAsset : IDisposable
 
 public interface IAsset<out T> : IAsset
 {
-    T Get();
+    T Value { get; }
 }
 
 public interface IReload<out T>
