@@ -20,7 +20,7 @@ public class CSubViewport(CSubViewport.Props props) : ComponentFunc((self, child
         Local = Transform2D.Identity
     });
 
-    props.Texture.Value = viewport.Texture;
+    props.Texture.Init(viewport.Texture);
     
     viewport.AddTo(container);
     self.OnLateCleanup(() => viewport.RemoveFrom(container));
@@ -32,6 +32,6 @@ public class CSubViewport(CSubViewport.Props props) : ComponentFunc((self, child
     {
         public Vector2I Size { get; init; }
         
-        public IRefMut<ITexture2D?> Texture { get; init; }
+        public IOut<ITexture2D?> Texture { get; init; }
     }
 }
