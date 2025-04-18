@@ -600,4 +600,9 @@ public static class NodeInitEx
     {
         self.CallDeferred(act => act(), action);
     }
+
+    public static void AutoDispose(this INodeInit self, IDisposable disposable)
+    {
+        self.OnCleanup(() => disposable.Dispose());
+    }
 }

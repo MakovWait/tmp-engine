@@ -8,51 +8,62 @@ public class For<T> : Component where T : For<T>.IItem
     public required ReactiveList<T> In { get; init; }
 
     public required Func<T, int, IComponent> Render { get; init; }
+
+    private bool _queuedToUpdate;
     
     protected override Components Init(INodeInit self)
     {
         Dictionary<string, Node> nodes = new();
         Dictionary<string, Node> nodesCopy = new();
-     
-        // TODO replace signal
-        // var sIn = In.ToSignalFrom(self);
-        
-        // self.UseEffect(() =>
-        // {
-        //     var items = sIn.Value;
-        //     
-        //     foreach (var node in nodes)
-        //     {
-        //         nodesCopy.Add(node.Key, node.Value);
-        //         Self.RemoveChild(node.Value);
-        //     }
-        //     nodes.Clear();
-        //
-        //     var idx = 0;
-        //     foreach (var item in items)
-        //     {
-        //         if (nodesCopy.TryGetValue(item.Key, out var n))
-        //         {
-        //             RegisterNode(item.Key, n);
-        //             nodesCopy.Remove(item.Key);
-        //             Self.AddChild(n);
-        //         }
-        //         else
-        //         {
-        //             var node = CreateChildAndMount(Render(item, idx));
-        //             RegisterNode(item.Key, node);
-        //         }
-        //         idx++;
-        //     }
-        //
-        //     foreach (var node in nodesCopy.Values)
-        //     {
-        //         node.Free();
-        //     }
-        //     nodesCopy.Clear();
-        // });
+
+        In.Changed += UpdateDeferred;
+        self.OnCleanup(() => In.Changed -= UpdateDeferred);
 
         return [];
+    
+        void UpdateDeferred()
+        {
+            if (_queuedToUpdate) return;
+            _queuedToUpdate = true;
+            self.CallDeferred(Update);
+        }
+        
+        void Update()
+        {
+            var items = In;
+            
+            foreach (var node in nodes)
+            {
+                nodesCopy.Add(node.Key, node.Value);
+                Self.RemoveChild(node.Value);
+            }
+            nodes.Clear();
+        
+            var idx = 0;
+            foreach (var item in items)
+            {
+                if (nodesCopy.TryGetValue(item.Key, out var n))
+                {
+                    RegisterNode(item.Key, n);
+                    nodesCopy.Remove(item.Key);
+                    Self.AddChild(n);
+                }
+                else
+                {
+                    var node = CreateChildAndMount(Render(item, idx));
+                    RegisterNode(item.Key, node);
+                }
+                idx++;
+            }
+        
+            foreach (var node in nodesCopy.Values)
+            {
+                node.Free();
+            }
+            nodesCopy.Clear();
+            
+            _queuedToUpdate = false;
+        }
         
         void RegisterNode(string key, Node node)
         {
@@ -69,7 +80,7 @@ public class For<T> : Component where T : For<T>.IItem
 
 public class ReactiveList<T> : IEnumerable<T>
 {
-    private event Action? Changed;
+    public event Action? Changed;
 
     private readonly List<T> _items = [];
 
@@ -92,18 +103,6 @@ public class ReactiveList<T> : IEnumerable<T>
         _items.Clear();
         Changed?.Invoke();
     }
-
-    // TODO replace signal
-    // public ISignal<ReactiveList<T>> ToSignalFrom(INodeInit node)
-    // {
-    //     var signal = node.CreateSignal(set =>
-    //     {
-    //         var trigger = () => set(this);
-    //         Changed += trigger;
-    //         return () => Changed -= trigger;
-    //     }, this);
-    //     return signal;
-    // }
     
     public List<T>.Enumerator GetEnumerator()
     {

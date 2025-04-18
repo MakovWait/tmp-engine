@@ -1,3 +1,4 @@
+using R3;
 using Tmp.Core.Comp;
 using Tmp.Core.Comp.Flow;
 
@@ -49,8 +50,76 @@ public class Tests
     }
 }
 
+public class ConditionalTests
+{
+    [Test]
+    public void Smoke()
+    {
+        var cond = new ReactiveProperty<bool>(false);
+        var tree = new Tree();
+        tree.Build(new ComponentFunc(self =>
+        {
+            return new ComponentFunc(self =>
+            {
+                self.OnMount(() => Assert.Pass());
+                return [];
+            }).If(cond);
+        }));
+        cond.Value = true;
+        tree.FlushDeferredQueue();
+        Assert.Fail();
+    }
+    
+    [Test]
+    // TODO now it is not checked but should be one day
+    public void UpdateIsQueued()
+    {
+        var cond = new ReactiveProperty<bool>(false);
+        var tree = new Tree();
+        tree.Build(new ComponentFunc(self =>
+        {
+            return new ComponentFunc(self =>
+            {
+                self.OnMount(() => Assert.Pass());
+                return [];
+            }).If(cond);
+        }));
+        cond.Value = true;
+        cond.Value = false;
+        cond.Value = true;
+        tree.FlushDeferredQueue();
+        Assert.Fail();
+    }
+}
+
 public class ForTests
 {
+    [Test]
+    // TODO now it is not checked but should be one day
+    public void UpdateIsQueued()
+    {
+        var tree = new Tree();
+
+        var items = new ReactiveList<Item>();
+        tree.Build(new ComponentFunc(self =>
+        {
+            return new For<Item>
+            {
+                In = items,
+                Render = (item, _) => new ComponentFunc(self =>
+                {
+                    self.OnMount(() => Console.WriteLine(item.Key) );
+                    return [];
+                })
+            };
+        }));
+        
+        items.Add(new Item("test"));
+        items.Add(new Item("test2"));
+        tree.FlushDeferredQueue();
+        Assert.Pass();
+    }
+    
     [Test]
     public void Smoke()
     {
@@ -76,11 +145,32 @@ public class ForTests
         
         items.Add(new Item("test"));
         tree.FlushDeferredQueue();
-        tree.FlushDeferredQueue();
-        
         Assert.Fail();
     }
 
+    [Test]
+    public void ForIsDeferred()
+    {
+        var tree = new Tree();
+
+        var items = new ReactiveList<Item>();
+        tree.Build(new ComponentFunc(self =>
+        {
+            return new For<Item>
+            {
+                In = items,
+                Render = (item, _) => new ComponentFunc(self =>
+                {
+                    self.OnMount(Assert.Pass);
+                    return [];
+                })
+            };
+        }));
+        
+        items.Add(new Item("test"));
+        Assert.Fail();
+    }
+    
     private class Item(string key) : For<Item>.IItem
     {
         public string Key { get; } = key;

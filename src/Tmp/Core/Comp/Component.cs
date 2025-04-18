@@ -1,4 +1,5 @@
 using System.Collections;
+using R3;
 using Tmp.Core.Comp.Flow;
 
 namespace Tmp.Core.Comp;
@@ -152,19 +153,17 @@ public static class ComponentEx
         return [self];
     }
     
-    // TODO replace signal
-    // public static IComponent If(this IComponent self, ISignal<bool> condition)
-    // {
-    //     return new Conditional
-    //     {
-    //         When = condition,
-    //         Children = self.AsChildren()
-    //     };
-    // }
+    public static Conditional If(this IComponent self, Observable<bool> condition)
+    {
+        return new Conditional
+        {
+            When = condition,
+            Children = self.AsChildren()
+        };
+    }
 }
 
 public interface IComponent
 {
     Node Build(Tree tree, Node? parent);
 }
-
