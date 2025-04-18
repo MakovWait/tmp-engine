@@ -7,6 +7,7 @@ public class Conditional : Component
     public required Observable<bool> When { get; init; }
 
     private bool _queuedToUpdate;
+    private bool _lastWhen;
     
     protected override Components Init(INodeInit self)
     {
@@ -20,9 +21,10 @@ public class Conditional : Component
     
     private void QueueUpdate(bool when)
     {
+        _lastWhen = when;
         if (_queuedToUpdate) return;
         _queuedToUpdate = true;
-        Self.CallDeferred(state => state.confitional.Update(state.when), (confitional: this, when));
+        Self.CallDeferred(confitional => confitional.Update(confitional._lastWhen), this);
     }
     
     private void Update(bool when)

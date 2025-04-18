@@ -8,14 +8,15 @@ public class Portal(INodeLocator mount) : Component
     
     protected override Components Init(INodeInit self)
     {
-        self.OnMount(() =>
+        self.CallDeferred(() =>
         {
             var remoteParent = Mount.Get(self);
             Debug.Assert(remoteParent != null);
             
             foreach (var component in Children)
             {
-                component.Build(Tree, remoteParent);
+                var child = component.Build(Tree, remoteParent);
+                child.Mount();
             }
         });
         

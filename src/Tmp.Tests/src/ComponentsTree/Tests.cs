@@ -161,14 +161,14 @@ public class ForTests
                 In = items,
                 Render = (item, _) => new ComponentFunc(self =>
                 {
-                    self.OnMount(Assert.Pass);
+                    self.OnMount(Assert.Fail);
                     return [];
                 })
             };
         }));
         
         items.Add(new Item("test"));
-        Assert.Fail();
+        Assert.Pass();
     }
     
     private class Item(string key) : For<Item>.IItem
@@ -213,11 +213,31 @@ public class PortalTests
                 }
             ];
         }));
-
         tree.FlushDeferredQueue();
-        tree.FlushDeferredQueue();
-        
         Assert.Fail();
+    }
+    
+    [Test]
+    public void PortalIsDeferred()
+    {
+        var tree = new Tree();
+
+        tree.Build(new ComponentFunc(self =>
+        {
+            self.SetName("root");
+            return
+            [
+                new Portal("/root/remote-parent".AsNodePathLocator())
+                {
+                    new ComponentFunc(self =>
+                    {
+                        self.OnMount(Assert.Fail);
+                        return [];
+                    })
+                }
+            ];
+        }));
+        Assert.Pass();
     }
 }
 
