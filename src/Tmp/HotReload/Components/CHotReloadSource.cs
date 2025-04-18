@@ -9,7 +9,7 @@ public class CHotReloadSource() : ComponentFunc((self, children) =>
 
     var target = new HotReloadTarget(self);
     hotReloadSource.Add(target);
-    self.OnCleanup(() => hotReloadSource.Remove(target));
+    self.OnLateCleanup(() => hotReloadSource.Remove(target));
 
     return children;
 })

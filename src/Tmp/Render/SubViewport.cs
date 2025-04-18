@@ -82,7 +82,7 @@ public class SubViewport : IViewport
         self.CreateContext<IViewport>(this);
         
         Load();
-        self.OnCleanup(Unload);
+        self.OnLateCleanup(Unload);
     }
 
     public class SubViewportTexture(SubViewport subViewport) : ITexture2D

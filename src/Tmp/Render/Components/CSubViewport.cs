@@ -23,7 +23,7 @@ public class CSubViewport(CSubViewport.Props props) : ComponentFunc((self, child
     props.Texture.Value = viewport.Texture;
     
     viewport.AddTo(container);
-    self.OnCleanup(() => viewport.RemoveFrom(container));
+    self.OnLateCleanup(() => viewport.RemoveFrom(container));
 
     return children;
 })

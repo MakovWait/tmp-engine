@@ -34,7 +34,7 @@ public class CWindowsRl() : ComponentFunc((self, children) =>
     var windows = new WindowsRl();
     self.CreateContext<IWindows>(windows);
     
-    self.OnCleanup(() => windows.Close());
+    self.OnLateCleanup(() => windows.Close());
 
     return children;
 });

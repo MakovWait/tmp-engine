@@ -319,7 +319,7 @@ public static class NodeTransformExtensions
         var transformCtx = self.CreateContext(transform);
         
         ((INode2DTransform)transformCtx).AddTo(parentTransform);
-        self.OnCleanup(() =>
+        self.OnLateCleanup(() =>
         {
             ((INode2DTransform)transformCtx).ClearParent();
         });

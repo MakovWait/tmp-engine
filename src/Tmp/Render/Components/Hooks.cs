@@ -14,7 +14,7 @@ public static class Hooks
         self.CreateContext<ICanvasItemContainer>(item);
 
         parent.AddChild(item);
-        self.OnCleanup(() =>
+        self.OnLateCleanup(() =>
         {
             parent.RemoveChild(item);
         });

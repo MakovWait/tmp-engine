@@ -21,7 +21,7 @@ public class CWindowsImGui() : ComponentFunc((self, children) =>
     var windows = new WindowsImGui();
     self.CreateContext<IWindows>(windows);
     
-    self.OnCleanup(() => windows.Close());
+    self.OnLateCleanup(() => windows.Close());
 
     return children;
 });

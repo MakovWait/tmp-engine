@@ -10,23 +10,30 @@ public class Node : INodeInit
     private readonly Children _children = new();
     private readonly Callbacks _callbacks = new();
     private readonly Callbacks _lateCallbacks = new();
-    private readonly List<Action> _cleanups = [];
+    private readonly LifecycleCallbacks _onCleanups = new();
+    private readonly LifecycleCallbacks _onLateCleanups = new();
+    private readonly LifecycleCallbacks _onMounts = new();
+    private readonly LifecycleCallbacks _onLateMounts = new();
     
     private NodeState _state = NodeState.Building;
-    private Scope? _scope;
     private readonly Tree _tree;
-    private readonly CurrentScope _currentScope;
-    private readonly Signals _signals;
-    private readonly ISignalMut<string> _name;
 
-    public ISignal<string> Name => _name;
+    public string Name { get; set; }
 
-    public Node(string initialName, Tree tree, CurrentScope currentScope, Signals signals)
+    public void OnMount(Action mount)
+    {
+        _onMounts.Add(mount);
+    }
+
+    public void OnLateMount(Action mount)
+    {
+        _onLateMounts.Add(mount);
+    }
+
+    public Node(string initialName, Tree tree)
     {
         _tree = tree;
-        _currentScope = currentScope;
-        _signals = signals;
-        _name = signals.Create(initialName, new SignalValueEquals.Equitable<string>());
+        Name = initialName;
     }
 
     enum NodeState
@@ -40,18 +47,19 @@ public class Node : INodeInit
     public void Mount()
     {
         _state = NodeState.Mounted;
+        _onMounts.InvokeOneShot();
         _children.Mount();
+        _onLateMounts.InvokeOneShot();
     }
 
     public void Free()
     {
-        _scope!.Clean();
+        _onCleanups.InvokeOneShot();
         _children.Free();
-        foreach (var cleanup in _cleanups)
-        {
-            cleanup();
-        }
+        _onLateCleanups.InvokeOneShot();
         _state = NodeState.Freed;
+        _onCleanups.Clear();
+        _onLateCleanups.Clear();
     }
 
     public Node? GetNode(NodePath nodePath)
@@ -80,7 +88,7 @@ public class Node : INodeInit
             }
             else if (current == null)
             {
-                if (name.Equals(_tree.Root.Name.UntrackedValue))
+                if (name.Equals(_tree.Root.Name))
                 {
                     next = _tree.Root;
                 }
@@ -136,150 +144,25 @@ public class Node : INodeInit
     
     public void Init(Action<Node> init)
     {
-        _scope = new Scope(
-            new Computation<NoArgs>(prev =>
-            {
-                init(this);
-                return prev;
-            }, new NoArgs()),
-            _currentScope,
-            _tree
-        )
-        {
-            NoTrack = true
-        };
-        // currentScope.Value?.Bind(_scope);
-        _scope.Trigger();
+        init(this);
     }
 
     private void ValidateChildName(Node child)
     {
-        var name = child.Name.UntrackedValue;
+        var name = child.Name;
         var unique = _children.NameIsUnique(child);
         if (unique) return;
-        child._name.Value = $"@{name}@{_children.IndexOf(child)}";
-    }
-    
-    private void RegisterScope(IScope scope)
-    {
-        _currentScope.Value?.Bind(scope);
+        child.Name = $"@{name}@{_children.IndexOf(child)}";
     }
 
-    public ISignalMut<T> UseSignal<T>(T initial, ISignalValueEquals<T>? equals)
+    public void OnLateCleanup(Action cleanup)
     {
-        return _signals.Create(initial, equals);
-    }
-    
-    public ISignal<T> CreateSignal<T>(CreateSignalFactory<T> factory, T initial)
-    {
-        var signal = _signals.Create(initial, null);
-        
-        var cleanup = factory(newVal =>
-        {
-            signal.Value = newVal;
-        });
-        _cleanups.Add(cleanup);
-        
-        return signal;
+        _onLateCleanups.Add(cleanup);
     }
 
-    public void OnCleanup(ICleanup cleanup)
-    {
-        _currentScope.Value?.Bind(cleanup);
-    }
-
-    public void OnMount(Action action)
-    {
-        this.UseEffect(() => Untrack(a => a(), action));
-    }
-    
-    public void UseEffect(IComputation computation)
-    {
-        var effectScope = new Scope(
-            new BatchedComputation(this, computation),
-            _currentScope,
-            _tree
-        )
-        {
-            Deferred = true
-        };
-        _tree.Enqueue(effectScope);
-        RegisterScope(effectScope);
-    }
-
-    public void UseComputed(IComputation computation)
-    {
-        var scope = new Scope(computation, _currentScope, _tree);
-        RegisterScope(scope);
-        scope.Trigger();
-    }
-
-    public ISignal<T> UseMemo<T>(Func<T, T> fn, T initial, ISignalValueEquals<T>? equals)
-    {
-        var signal = UseSignal(initial, equals);
-        var memoScope = new Scope(
-            new BatchedComputation(
-                this, 
-                new Computation<T>(prev =>
-                {
-                    var next = fn(prev);
-                    signal.Value = next;
-                    return next;
-                }, initial)
-            ),
-            _currentScope,
-            _tree
-        );
-        memoScope.Trigger();
-        RegisterScope(memoScope);
-        return signal;
-    }
-    
     public void OnCleanup(Action cleanup)
     {
-        OnCleanup(new Cleanup(cleanup));
-    }
-
-    public void Untrack<TArgs>(Action<TArgs> action, TArgs args)
-    {
-        var scope = _currentScope.Value!;
-        var prev = scope.NoTrack;
-        scope.NoTrack = true;
-        try
-        {
-            action(args);
-        }
-        finally
-        {
-            scope.NoTrack = prev;
-        }
-    }
-
-    public void Batch<TArgs>(Action<TArgs> action, TArgs args)
-    {
-        if (_signals.Batched)
-        {
-            action(args);
-        }
-        else
-        {
-            var prev = _signals.Batched; 
-            _signals.Batched = true;
-            try
-            {
-                action(args);
-            }
-            finally
-            {
-                _signals.FlushBatches();
-                _signals.Batched = prev;
-            }
-        }
-    }
-    
-    public void SetScopeName(string name)
-    {
-        _currentScope.SetName(name);
+        _onCleanups.Add(cleanup);
     }
 
     public T CreateContext<T>(T value)
@@ -312,12 +195,8 @@ public class Node : INodeInit
 
     public void SetName(string value)
     {
-        Batch(args =>
-        {
-            var (self, val) = args;
-            self._name.Value = val;
-            self._parent?.ValidateChildName(self);
-        }, (this, value));
+        Name = value;
+        _parent?.ValidateChildName(this);
     }
 
     public void CallDeferred<T>(Action<T> action, T args)
@@ -340,7 +219,7 @@ public class Node : INodeInit
         return _parent!.FindInContext<T>();
     }
     
-    private string NodePath => string.Join("/", _parent?.NodePath ?? "", Name.Value);
+    private string NodePath => string.Join("/", _parent?.NodePath ?? "", Name);
     
     private class Children
     {
@@ -391,7 +270,7 @@ public class Node : INodeInit
             foreach (var node in List)
             {
                 if (node == child) continue;
-                if (node.Name.UntrackedValue.Equals(child.Name.UntrackedValue))
+                if (node.Name.Equals(child.Name))
                 {
                     return false;
                 }
@@ -403,7 +282,7 @@ public class Node : INodeInit
         {
             foreach (var node in List)
             {
-                if (node.Name.UntrackedValue.Equals(name))
+                if (node.Name.Equals(name))
                 {
                     return node;
                 }
@@ -434,6 +313,35 @@ public class Node : INodeInit
             }
             
             _map[typeof(T)] = val;
+        }
+    }
+
+    internal class LifecycleCallbacks
+    {
+        private readonly List<Action> _callbacks = [];
+
+        public void Clear()
+        {
+            _callbacks.Clear();
+        }
+        
+        public void InvokeOneShot()
+        {
+            Invoke();
+            Clear();
+        }
+        
+        public void Invoke()
+        {
+            foreach (var callback in _callbacks)
+            {
+                callback();
+            }
+        }
+        
+        public void Add(Action callback)
+        {
+            _callbacks.Add(callback);
         }
     }
     
@@ -533,26 +441,10 @@ public interface IDeferredQueue
 
 public class Tree : IDeferredQueue
 {
-    private readonly CurrentScope _currentScope;
-    private readonly Signals _signals;
     private readonly TreeDeferredQueue _deferredQueue = new();
     private Node? _root;
 
     internal Node Root => _root!;
-    
-    public Tree(CurrentScope currentScope, Signals signals)
-    {
-        _currentScope = currentScope;
-        _signals = signals;
-    }
-    
-    public Tree(CurrentScope currentScope) : this(currentScope, new Signals(currentScope, new SignalBatch()))
-    {
-    }
-    
-    public Tree() : this(new CurrentScope())
-    {
-    }
 
     public void Call<T>(T args)
     {
@@ -599,7 +491,7 @@ public class Tree : IDeferredQueue
 
     internal Node CreateNode(string name)
     {
-        return new Node(name, this, _currentScope, _signals);
+        return new Node(name, this);
     }
 
     private class TreeDeferredQueue
@@ -672,27 +564,15 @@ public interface INodeLocation
 
 public interface INodeInit : INodeLocation
 {
-    ISignal<string> Name { get; }
+    string Name { get; }
+
+    void OnMount(Action mount);
     
-    void UseEffect(IComputation computation);
+    void OnLateMount(Action mount);
     
-    void UseComputed(IComputation computation);
-
-    ISignal<T> UseMemo<T>(Func<T, T> fn, T initial, ISignalValueEquals<T>? equals);
-
-    ISignalMut<T> UseSignal<T>(T initial, ISignalValueEquals<T>? equals);
-
-    ISignal<T> CreateSignal<T>(CreateSignalFactory<T> factory, T initial);
+    void OnLateCleanup(Action cleanup);
     
-    void OnCleanup(ICleanup cleanup);
-
-    void OnMount(Action action);
-
-    void Untrack<TArgs>(Action<TArgs> action, TArgs args);
-
-    void Batch<TArgs>(Action<TArgs> action, TArgs args);
-
-    void SetScopeName(string name);
+    void OnCleanup(Action cleanup);
 
     T CreateContext<T>(T value);
     
@@ -709,32 +589,6 @@ public interface INodeInit : INodeLocation
     void CallDeferred<T>(Action<T> action, T args);
 }
 
-public static class NodeInitExUseEquitableSignal
-{
-    public static ISignalMut<T> UseSignal<T>(this INodeInit self, T initial) where T : IEquatable<T>
-    {
-        return self.UseSignal(initial, new SignalValueEquals.Equitable<T>());
-    }
-    
-    public static ISignal<T> UseMemo<T>(this INodeInit self, Func<T, T> fn, T initial) where T : IEquatable<T>
-    {
-        return self.UseMemo(fn, initial, new SignalValueEquals.Equitable<T>());
-    }
-}
-
-public static class NodeInitExUseObjSignal
-{
-    public static ISignal<T> UseMemo<T>(this INodeInit self, Func<T, T> fn, T initial) where T : class
-    {
-        return self.UseMemo(fn, initial, new SignalValueEquals.ObjRef<T>());
-    }
-    
-    public static ISignalMut<T> UseSignal<T>(this INodeInit self, T initial) where T : class
-    {
-        return self.UseSignal(initial, new SignalValueEquals.ObjRef<T>());
-    }
-}
-
 public static class NodeInitEx
 {
     public static void Call<T>(this INodeInit self) where T : new()
@@ -742,36 +596,8 @@ public static class NodeInitEx
         self.Call<T>(new T());
     }
     
-    public static void UseEffect<T>(this INodeInit self, Func<T, T> effect, T initial)
+    public static void CallDeferred(this INodeInit self, Action action)
     {
-        self.UseEffect(new Computation<T>(effect, initial));
-    }
-    
-    public static void UseEffect(this INodeInit self, Action effect)
-    {
-        self.UseEffect(prev =>
-        {
-            effect();
-            return prev;
-        }, new NoArgs());
-    }
-    
-    public static void UseComputed<T>(this INodeInit self, Func<T, T> effect, T initial)
-    {
-        self.UseComputed(new Computation<T>(effect, initial));
-    }
-    
-    public static void UseComputed(this INodeInit self, Action effect)
-    {
-        self.UseComputed(prev =>
-        {
-            effect();
-            return prev;
-        }, new NoArgs());
-    }
-    
-    public static void OnCleanup(this INodeInit self, Action cleanup)
-    {
-        self.OnCleanup(new Cleanup(cleanup));
+        self.CallDeferred(act => act(), action);
     }
 }

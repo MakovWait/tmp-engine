@@ -11,45 +11,46 @@ public class For<T> : Component where T : For<T>.IItem
     
     protected override Components Init(INodeInit self)
     {
-        var sIn = In.ToSignalFrom(self);
-        
         Dictionary<string, Node> nodes = new();
         Dictionary<string, Node> nodesCopy = new();
+     
+        // TODO replace signal
+        // var sIn = In.ToSignalFrom(self);
         
-        self.UseEffect(() =>
-        {
-            var items = sIn.Value;
-            
-            foreach (var node in nodes)
-            {
-                nodesCopy.Add(node.Key, node.Value);
-                Self.RemoveChild(node.Value);
-            }
-            nodes.Clear();
-
-            var idx = 0;
-            foreach (var item in items)
-            {
-                if (nodesCopy.TryGetValue(item.Key, out var n))
-                {
-                    RegisterNode(item.Key, n);
-                    nodesCopy.Remove(item.Key);
-                    Self.AddChild(n);
-                }
-                else
-                {
-                    var node = CreateChildAndMount(Render(item, idx));
-                    RegisterNode(item.Key, node);
-                }
-                idx++;
-            }
-
-            foreach (var node in nodesCopy.Values)
-            {
-                node.Free();
-            }
-            nodesCopy.Clear();
-        });
+        // self.UseEffect(() =>
+        // {
+        //     var items = sIn.Value;
+        //     
+        //     foreach (var node in nodes)
+        //     {
+        //         nodesCopy.Add(node.Key, node.Value);
+        //         Self.RemoveChild(node.Value);
+        //     }
+        //     nodes.Clear();
+        //
+        //     var idx = 0;
+        //     foreach (var item in items)
+        //     {
+        //         if (nodesCopy.TryGetValue(item.Key, out var n))
+        //         {
+        //             RegisterNode(item.Key, n);
+        //             nodesCopy.Remove(item.Key);
+        //             Self.AddChild(n);
+        //         }
+        //         else
+        //         {
+        //             var node = CreateChildAndMount(Render(item, idx));
+        //             RegisterNode(item.Key, node);
+        //         }
+        //         idx++;
+        //     }
+        //
+        //     foreach (var node in nodesCopy.Values)
+        //     {
+        //         node.Free();
+        //     }
+        //     nodesCopy.Clear();
+        // });
 
         return [];
         
@@ -91,17 +92,18 @@ public class ReactiveList<T> : IEnumerable<T>
         _items.Clear();
         Changed?.Invoke();
     }
-    
-    public ISignal<ReactiveList<T>> ToSignalFrom(INodeInit node)
-    {
-        var signal = node.CreateSignal(set =>
-        {
-            var trigger = () => set(this);
-            Changed += trigger;
-            return () => Changed -= trigger;
-        }, this);
-        return signal;
-    }
+
+    // TODO replace signal
+    // public ISignal<ReactiveList<T>> ToSignalFrom(INodeInit node)
+    // {
+    //     var signal = node.CreateSignal(set =>
+    //     {
+    //         var trigger = () => set(this);
+    //         Changed += trigger;
+    //         return () => Changed -= trigger;
+    //     }, this);
+    //     return signal;
+    // }
     
     public List<T>.Enumerator GetEnumerator()
     {

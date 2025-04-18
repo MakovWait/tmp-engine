@@ -14,7 +14,7 @@ public sealed class CAssets(IAssets assets) : ComponentFunc((self, children) =>
     
     assets.AddLoader(textLoader);
 
-    self.OnCleanup(assets.Dispose);
+    self.OnLateCleanup(assets.Dispose);
 
     return children;
 });

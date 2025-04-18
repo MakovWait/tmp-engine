@@ -152,14 +152,15 @@ public static class ComponentEx
         return [self];
     }
     
-    public static IComponent If(this IComponent self, ISignal<bool> condition)
-    {
-        return new Conditional
-        {
-            When = condition,
-            Children = self.AsChildren()
-        };
-    }
+    // TODO replace signal
+    // public static IComponent If(this IComponent self, ISignal<bool> condition)
+    // {
+    //     return new Conditional
+    //     {
+    //         When = condition,
+    //         Children = self.AsChildren()
+    //     };
+    // }
 }
 
 public interface IComponent

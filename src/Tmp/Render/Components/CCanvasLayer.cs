@@ -19,7 +19,7 @@ public class CCanvasLayer : Component
 
         var container = self.UseContext<ICanvasLayerContainer>();
         container.Add(layer);
-        self.OnCleanup(() => container.Remove(layer));
+        self.OnLateCleanup(() => container.Remove(layer));
 
         return Children;
     }
