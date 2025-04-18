@@ -35,5 +35,7 @@ public class Conditional : Component
         {
             ClearChildren();
         } 
+        
+        _queuedToUpdate = false;
     }
 }
