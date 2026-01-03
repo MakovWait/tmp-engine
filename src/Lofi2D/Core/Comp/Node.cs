@@ -14,6 +14,7 @@ public class Node : INodeInit
     private readonly LifecycleCallbacks _onLateCleanups = new();
     private readonly LifecycleCallbacks _onMounts = new();
     private readonly LifecycleCallbacks _onLateMounts = new();
+    private readonly ITraits _traits = new Traits();
 
     private readonly Tree _tree;
 
@@ -202,6 +203,32 @@ public class Node : INodeInit
     {
         Name = value;
         _parent?.ValidateChildName(this);
+    }
+
+    public T AddTrait<T>(T trait) where T : Trait
+    {
+        _traits.AddTrait(trait);
+        return trait;
+    }
+
+    public T GetTrait<T>() where T : Trait
+    {
+        return _traits.GetTrait<T>();
+    }
+
+    public T? TryGetTrait<T>() where T : Trait
+    {
+        return _traits.TryGetTrait<T>();
+    }
+
+    public bool HasTrait<T>() where T : Trait
+    {
+        return _traits.HasTrait<T>();
+    }
+
+    public bool RemoveTrait<T>() where T : Trait
+    {
+        return _traits.RemoveTrait<T>();
     }
 
     public void CallDeferred<T>(Action<T> action, T args)
@@ -631,6 +658,16 @@ public interface INodeInit : INodeLocation, ICallDeferredSource
     ICallbackDispose OnLate<T>(Action<T> action);
 
     void SetName(string value);
+    
+    T AddTrait<T>(T trait) where T : Trait;
+    
+    T GetTrait<T>() where T : Trait;
+    
+    T? TryGetTrait<T>() where T : Trait;
+    
+    bool HasTrait<T>() where T : Trait;
+    
+    bool RemoveTrait<T>() where T : Trait;
 }
 
 public static class NodeInitEx
@@ -654,5 +691,62 @@ public static class NodeInitEx
     public static T DisposeWith<T>(this T self, INodeInit node) where T : IDisposable
     {
         return node.AutoDispose(self);
+    }
+}
+
+public abstract class Trait
+{
+    
+}
+
+public interface ITraits
+{
+    void AddTrait<T>(T trait) where T : Trait;
+    
+    T GetTrait<T>() where T : Trait;
+    
+    T? TryGetTrait<T>() where T : Trait;
+    
+    bool HasTrait<T>() where T : Trait;
+    
+    bool RemoveTrait<T>() where T : Trait;
+}
+
+public class Traits : ITraits
+{
+    private readonly Dictionary<Type, Trait> _traits = new();
+    
+    public void AddTrait<T>(T trait) where T : Trait
+    {
+        Debug.Assert(!HasTrait<T>());
+        _traits[typeof(T)] = trait;
+    }
+
+    public T GetTrait<T>() where T : Trait
+    {
+        if (_traits.TryGetValue(typeof(T), out var trait))
+        {
+            return (T)trait;
+        }
+        throw new KeyNotFoundException($"Trait of type {typeof(T)} not found.");
+    }
+
+    public T? TryGetTrait<T>() where T : Trait
+    {
+        if (_traits.TryGetValue(typeof(T), out var trait))
+        {
+            return (T)trait;
+        }
+        return null;
+    }
+
+    public bool HasTrait<T>() where T : Trait
+    {
+        return _traits.ContainsKey(typeof(T));
+    }
+
+    public bool RemoveTrait<T>() where T : Trait
+    {
+        return _traits.Remove(typeof(T));
     }
 }
