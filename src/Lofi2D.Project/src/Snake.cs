@@ -83,8 +83,9 @@ public class Snake
 
 public class Head
 {
-    public Transform2D Transform { get; set; }
-
+    public Transform2D Transform { get; private set; }
+    public Vector2 Dir => _dir;
+    
     public LastPosition CurrentPosition => new()
     {
         Position = Transform.Origin,
@@ -92,6 +93,49 @@ public class Head
     };
     
     public LastPositions LastPositions { get; } = new();
+
+    private Vector2 _dir = Vector2.Up;
+
+    public void Move(
+        float dt, 
+        bool leftPressed,
+        bool rightPressed,
+        bool boostPressed,
+        Bounds bounds
+    )
+    {
+        Radians rotationSpeed = (1.66f * Mathf.Pi);
+        const float speed = 60f;
+        const float speedMul = 1.75f;
+        const int radius = 6;
+        
+        if (leftPressed)
+        {
+            _dir = _dir.Rotated(-rotationSpeed * dt);
+        }
+        if (rightPressed)
+        {
+            _dir = _dir.Rotated(rotationSpeed * dt);
+        }
+            
+        var resultSpeed = speed * (boostPressed ? speedMul : 1);
+        
+        _dir = bounds.CheckBounce(Transform.Origin, _dir, radius);
+        
+        Transform = new Transform2D(
+            _dir.Angle(), 
+            Transform.Origin + _dir.Normalized() * resultSpeed * dt
+        );
+    }
+
+    public void SaveLastPosition()
+    {
+        LastPositions.Add(new LastPosition()
+        {
+            Position = Transform.Origin,
+            Rotation = Transform.Rotation,
+        });
+    }
 }
 
 public class BodyPart(string key)
@@ -170,12 +214,6 @@ public class CHead : Component
 {
     protected override Components Init(INodeInit self)
     {
-        var dir = Vector2.Up;
-        Radians rotationSpeed = (1.66f * Mathf.Pi);
-        const float speed = 60f;
-        const float speedMul = 1.75f;
-        const int radius = 6;
-        
         var savePositionsTimer = new Timer(0.1f);
 
         var head = self.UseContext<Snake>().Head;
@@ -196,36 +234,18 @@ public class CHead : Component
         self.On<Update>(_ =>
         {
             var dt = time.Delta;
-            
-            if (input.IsKeyPressed(KeyboardKey.A))
-            {
-                dir = dir.Rotated(-rotationSpeed * dt);
-            }
-            if (input.IsKeyPressed(KeyboardKey.D))
-            {
-                dir = dir.Rotated(rotationSpeed * dt);
-            }
-            
-            var resultSpeed = speed;
-            if (input.IsKeyPressed(KeyboardKey.Space))
-            {
-                resultSpeed *= speedMul;    
-            }
-
-            dir = bounds.CheckBounce(transform.GlobalPosition, dir, radius);
-
-            transform.GlobalPosition += dir.Normalized() * resultSpeed * dt;
-            transform.GlobalRotation = dir.Angle();
-
-            head.Transform = transform.Global;
+            head.Move(
+                dt, 
+                input.IsKeyPressed(KeyboardKey.A), 
+                input.IsKeyPressed(KeyboardKey.D),
+                input.IsKeyPressed(KeyboardKey.Space),
+                bounds
+            );
             if (savePositionsTimer.Tick(dt))
             {
-                head.LastPositions.Add(new LastPosition()
-                {
-                    Position = transform.GlobalPosition,
-                    Rotation = transform.GlobalRotation,
-                });
+                head.SaveLastPosition();
             }
+            transform.Local = head.Transform;
         });
         
         return [
@@ -238,7 +258,7 @@ public class CHead : Component
                 gizmoCanvasItem.OnDraw(
                     ctx =>
                     {
-                        ctx.DrawLine(Vector2.Zero, dir * 20, Colors.Blue);
+                        ctx.DrawLine(Vector2.Zero, head.Dir * 20, Colors.Blue);
                         head.LastPositions.Draw(gizmoTransform.GlobalPosition, ctx);
                     }
                 );
