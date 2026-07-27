@@ -33,7 +33,8 @@ public static class Project
 
             var boundsSize = new Vector2(320, 180);
             var bounds = root.CreateContext(new Bounds(new Rect2(-boundsSize / 2, boundsSize)));
-            root.CreateContext(new Snake());
+            var snake = root.CreateContext(new Snake());
+            root.CreateContext(new Food(bounds, snake));
 
             var viewportTexture = new Out<ITexture2D?>();
 

@@ -1,54 +1,62 @@
-﻿using Lofi2D.Core.Comp;
+﻿using Lofi2D.Animation;
+using Lofi2D.Asset.Components;
+using Lofi2D.Core.Comp;
 using Lofi2D.Core.Comp.Flow;
 using Lofi2D.Math;
 using Lofi2D.Math.Components;
 using Lofi2D.Render.Components;
+using Lofi2D.Render.Texture;
 
 namespace Lofi2D.Project;
+
+internal class Food(Bounds bounds, Snake snake)
+{
+    private readonly ReactiveList<FoodItem> _items = [];
+    public Signal<IReadOnlyList<FoodItem>> ItemsChanged => _items.Changed;
+
+    public void Update()
+    {
+        var spawnNextFood = false;
+        foreach (var foodItem in _items)
+        {
+            if (foodItem.Position.DistanceSquaredTo(snake.Head.Transform.Origin) < 8 * 8)
+            {
+                _items.QueueRemove(foodItem);
+                spawnNextFood = true;
+                snake.AddBodyPart();
+            }
+        }
+        _items.FlushRemoveQueue();
+        if (spawnNextFood)
+        {
+            SpawnNextFood();
+        }
+    }
+    
+    public void SpawnNextFood()
+    {
+        _items.Add(new FoodItem(Guid.NewGuid().ToString())
+        {
+            Position = bounds.GetRandomFoodPosition()
+        });
+    }  
+}
 
 public class CFood : Component
 {
     protected override Components Init(INodeInit self)
     {
-        var snake = self.UseContext<Snake>();
-        var bounds = self.UseContext<Bounds>();
-        var items = new ReactiveList<FoodItem>();
+        var food = self.UseContext<Food>();
 
-        self.OnMount(SpawnNextFood);
-
-        self.On<Update>(_ =>
-        {
-            var spawnNextFood = false;
-            foreach (var foodItem in items)
-            {
-                if (foodItem.Position.DistanceSquaredTo(snake.Head.Transform.Origin) < 8 * 8)
-                {
-                    items.QueueRemove(foodItem);
-                    spawnNextFood = true;
-                    snake.AddBodyPart();
-                }
-            }
-            items.FlushRemoveQueue();
-            if (spawnNextFood)
-            {
-                SpawnNextFood();
-            }
-        });
+        self.OnMount(food.SpawnNextFood);
+        self.On<Update>(_ => food.Update());
 
         return new CFor<FoodItem>()
         {
-            In = items.Changed,
+            In = food.ItemsChanged,
             ItemKey = item => item.Key,
             Render = (item, _) => new CFoodItem(item)
         };
-
-        void SpawnNextFood()
-        {
-            items.Add(new FoodItem(Guid.NewGuid().ToString())
-            {
-                Position = bounds.GetRandomFoodPosition()
-            });
-        }
     }
 }
 
@@ -65,11 +73,18 @@ public class CFoodItem(FoodItem data) : Component
     {
         var transform = self.UseTransform2D(new Transform2D(0, data.Position));
         var canvasItem = self.UseCanvasItem(transform);
+        var texture = self.UseAsset<ITexture2D>("assets://body_part_texture.jass");
 
-        canvasItem.OnDraw(ctx =>
-        {
-            ctx.DrawRect(new Rect2I(-8, -8, 16, 16), Colors.Red);
-        });
+        var tween = self.CreateOneShotTween();
+        tween.SetEase(Easing.EaseType.Out).SetTrans(Easing.TransitionType.Back);
+        tween.TweenMethod(transform.SetScale, Vector2.Zero, Vector2.One, 0.3f);
+        
+        canvasItem.OnDraw(
+            ctx =>
+            {
+                texture.Value.Draw(ctx, new Vector2(-16, -16), Colors.Red);
+            }
+        );
 
         return base.Init(self);
     }
